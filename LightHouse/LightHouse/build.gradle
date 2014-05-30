@@ -1,5 +1,11 @@
 apply plugin: 'android'
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 android {
     compileSdkVersion 19
     buildToolsVersion "19.0.3"
@@ -16,8 +22,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    sourceSets {
+        main {
+            resources.srcDirs = ['src/main/java']
+        }
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.radiusnetworks:AndroidProximityLibrary:1+@aar'
+
 }

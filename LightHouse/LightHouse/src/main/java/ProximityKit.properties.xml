@@ -1,0 +1,9 @@
+#
+# Download this file to 'ProximityKit.properties' in the root of your project's Java source folder
+#
+PKKitName=My Kit
+PKUserIdentifier=2789
+PKUserEmail=hksimon@gmail.com
+PKGlobalUserIdentifier=4095
+PKAPIToken=e26aa10090f6304d7e09d1a0237c21f82af63d1512f080f24e6cc20977abd1f6
+PKKitURL=http://www.proximitykit.com/api/kits/2536
