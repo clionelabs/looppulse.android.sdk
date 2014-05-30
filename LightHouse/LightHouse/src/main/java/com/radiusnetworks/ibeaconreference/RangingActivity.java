@@ -57,7 +57,7 @@ public class RangingActivity extends Activity implements IBeaconConsumer {
         });
 
         try {
-            iBeaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
+            iBeaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", "B9407F30-F5F8-466E-AFF9-25556B57FE6D", null, null));
         } catch (RemoteException e) {   }
     }
     private void logToDisplay(final String line) {
