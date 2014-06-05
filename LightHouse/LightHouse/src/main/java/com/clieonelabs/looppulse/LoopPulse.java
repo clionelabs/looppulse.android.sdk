@@ -64,7 +64,7 @@ public class LoopPulse implements BootstrapNotifier, RangeNotifier, IBeaconConsu
         beaconManager = com.radiusnetworks.proximity.ibeacon.IBeaconManager.getInstanceForApplication(context);
         beaconManager.setBackgroundBetweenScanPeriod(5000);
 
-        Region region = new Region("com.clionelabs.estimote", "B9407F30-F5F8-466E-AFF9-25556B57FE6D", null, null);
+        Region region = new Region("LoopPulseBootstrapRegion", "B9407F30-F5F8-466E-AFF9-25556B57FE6D", null, null);
         regionBootstrap = new RegionBootstrap(this, region);
 
         // simply constructing this class and holding a reference to it in your custom Application
@@ -132,7 +132,7 @@ public class LoopPulse implements BootstrapNotifier, RangeNotifier, IBeaconConsu
     public void onIBeaconServiceConnect() {
         beaconManager.setRangeNotifier(this);
         try {
-            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", "B9407F30-F5F8-466E-AFF9-25556B57FE6D", null, null));
+            beaconManager.startRangingBeaconsInRegion(new Region("LoopPulseRangingRegion", null, null, null));
         } catch (RemoteException e) {
             e.printStackTrace();
         }

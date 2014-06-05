@@ -12,8 +12,14 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.EditText;
+import android.widget.ListView;
 
 import com.clieonelabs.looppulse.LoopPulse;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 
 /**
  * Created by simon on 5/6/14.
@@ -21,11 +27,18 @@ import com.clieonelabs.looppulse.LoopPulse;
 public class LightHouseActivity extends Activity {
 
     protected static final String TAG = "LightHouse";
+    private ListView listView;
+    private ArrayList<BeaconEvent> events = new ArrayList<BeaconEvent>();
+    private LightHouseAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ranging);
+        setContentView(R.layout.lighthouse_activity);
+        
+        listView = (ListView) findViewById(R.id.listView);
+        adapter = new LightHouseAdapter(this, 0);
+        listView.setAdapter(adapter);
     }
 
     @Override
@@ -43,18 +56,47 @@ public class LightHouseActivity extends Activity {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
-            EditText editText = (EditText) findViewById(R.id.rangingText);
-
-            String message = String.format("Beacon detected: uuid: %s , accuracy: %.3f",
-                    intent.getStringExtra("uuid"),
-                    intent.getDoubleExtra("accuracy", -1));
-
-            editText.append(message + "\n");
+            BeaconEvent recentEvent = findRecentBeaconEvent(intent);
+            if (recentEvent != null) {
+                updateEvent(recentEvent);
+            }
+            else {
+                createEvent(intent);
+            }
         }
     };
 
+    private void createEvent(Intent intent) {
+        BeaconEvent event = new BeaconEvent();
+        event.setUUID(intent.getStringExtra("uuid"));
+        event.setMajor(intent.getIntExtra("major", -1));
+        event.setMinor(intent.getIntExtra("minor", -1));
+        event.setCreatedAt(new Date());
+        event.setLastSeenAt(new Date());
+        events.add(0, event);
+        adapter.clear();
+        adapter.addAll(events);
+    }
 
+    private void updateEvent(BeaconEvent event) {
+        event.setLastSeenAt(new Date());
+        adapter.clear();
+        adapter.addAll(events);
+    }
 
+    private BeaconEvent findRecentBeaconEvent(Intent intent) {
+        String uuid = intent.getStringExtra("uuid");
+        int major = intent.getIntExtra("major", -1);
+        int minor = intent.getIntExtra("minor", -1);
+        for (BeaconEvent event : events) {
+            if (uuid.equals(event.getUUID()) && major == event.getMajor() && minor == event.getMinor()) {
+                if (new Date().getTime() - event.getLastSeenAt().getTime() <= 5000) {
+                    return event;
+                }
+                return null;
+            }
+        }
+        return null;
+    }
 
 }

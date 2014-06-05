@@ -29,14 +29,13 @@ public class LighHouseApplication extends Application {
             LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
                     new IntentFilter(event));
         }
-
     }
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            Log.d(TAG, "Got message: " + intent.getAction());
+            Log.d(TAG, "Got message: " + intent.getAction() + " uuid:" + intent.getStringExtra("uuid") + " major:" + intent.getIntExtra("major", -1) + " minor:" + intent.getIntExtra("minor", -1));
         }
     };
 
