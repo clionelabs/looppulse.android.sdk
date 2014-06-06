@@ -72,6 +72,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="android-support-v4" level="project" />
     <orderEntry type="library" exported="" name="AndroidProximityLibrary-1.1.1" level="project" />
+    <orderEntry type="library" exported="" name="firebase-client-jvm-1.0.15" level="project" />
     <orderEntry type="library" exported="" name="AndroidIBeaconLibrary" level="project" />
   </component>
 </module>

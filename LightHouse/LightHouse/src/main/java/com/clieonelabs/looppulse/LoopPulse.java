@@ -12,6 +12,7 @@ import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.firebase.client.Firebase;
 import com.radiusnetworks.ibeacon.IBeacon;
 import com.radiusnetworks.ibeacon.IBeaconConsumer;
 import com.radiusnetworks.ibeacon.IBeaconManager;
@@ -38,12 +39,24 @@ public class LoopPulse implements BootstrapNotifier, RangeNotifier, IBeaconConsu
     private RegionBootstrap regionBootstrap;
     private BackgroundPowerSaver backgroundPowerSaver;
     private IBeaconManager beaconManager;
+    private DataStore dataStore;
+    private Visitor visitor;
 
     public LoopPulse(Application application, String token, String clientID) {
+        if (token == null || token.length() == 0) {
+            throw new IllegalArgumentException("token argument cannot be empty");
+        }
+        if (clientID == null || clientID.length() == 0) {
+            throw new IllegalArgumentException("clientID argument cannot be empty");
+        }
         this.application = application;
         this.context = application.getApplicationContext();
         this.token = token;
         this.clientID = clientID;
+        this.dataStore = new DataStore(context, clientID);
+        this.visitor = new Visitor(context);
+
+        this.dataStore.registerVisitor(visitor);
     }
 
     public void startLocationMonitoring() {
@@ -82,7 +95,6 @@ public class LoopPulse implements BootstrapNotifier, RangeNotifier, IBeaconConsu
         return context.getApplicationContext();
     }
 
-
     @Override
     public void didDetermineStateForRegion(int arg0, Region arg1) {
         // This method is not used in this example
@@ -92,23 +104,13 @@ public class LoopPulse implements BootstrapNotifier, RangeNotifier, IBeaconConsu
     @Override
     public void didEnterRegion(Region region) {
         Log.d(TAG, "did enter region.");
-
-        Intent intent = new Intent(EVENT_DID_ENTER_REGION);
-        intent.putExtra("major", region.getMajor());
-        intent.putExtra("minor", region.getMinor());
-        intent.putExtra("uuid", region.getProximityUuid());
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        this.dataStore.logEnterRegion(region);
     }
 
     @Override
     public void didExitRegion(Region region) {
-        Log.d(TAG, "exited region");
-
-        Intent intent = new Intent(EVENT_DID_EXIT_REGION);
-        intent.putExtra("major", region.getMajor());
-        intent.putExtra("minor", region.getMinor());
-        intent.putExtra("uuid", region.getProximityUuid());
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        Log.d(TAG, "did exit region");
+        this.dataStore.logExitRegion(region);
     }
 
     @Override
@@ -116,14 +118,7 @@ public class LoopPulse implements BootstrapNotifier, RangeNotifier, IBeaconConsu
         Log.d(TAG, "did range region");
 
         for (IBeacon beacon : iBeacons) {
-            Intent intent = new Intent(EVENT_DID_RANGE_BEACONS);
-            intent.putExtra("major", beacon.getMajor());
-            intent.putExtra("minor", beacon.getMinor());
-            intent.putExtra("uuid", beacon.getProximityUuid());
-            intent.putExtra("proximity", beacon.getProximity());
-            intent.putExtra("accuracy", beacon.getAccuracy());
-            intent.putExtra("rssi", beacon.getRssi());
-            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+            this.dataStore.logRangeBeaconInRegion(beacon, region);
         }
     }
 
