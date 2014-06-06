@@ -25,7 +25,7 @@ import java.util.Collection;
 /**
  * Created by simon on 6/6/14.
  */
-public class RadiusNetorksBeaconManager extends BeaconManager implements BootstrapNotifier, RangeNotifier, IBeaconConsumer {
+public class RadiusNetworksBeaconManager extends BeaconManager implements BootstrapNotifier, RangeNotifier, IBeaconConsumer {
 
     public static final String TAG = "LoopPuslse";
     private final Application application;
@@ -38,7 +38,7 @@ public class RadiusNetorksBeaconManager extends BeaconManager implements Bootstr
     private boolean shouldStartMonitoring;
     private boolean shouldStartRanging;
 
-    public RadiusNetorksBeaconManager(Application application, DataStore dataStore) {
+    public RadiusNetworksBeaconManager(Application application, DataStore dataStore) {
         this.application = application;
         this.context = application.getApplicationContext();
         this.dataStore = dataStore;

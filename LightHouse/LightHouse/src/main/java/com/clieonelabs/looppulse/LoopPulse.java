@@ -36,7 +36,7 @@ public class LoopPulse {
         this.clientID = clientID;
         this.dataStore = new DataStore(context, clientID);
         this.visitor = new Visitor(context);
-        this.beaconManager = new RadiusNetorksBeaconManager(application, dataStore);
+        this.beaconManager = new RadiusNetworksBeaconManager(application, dataStore);
 
         this.dataStore.registerVisitor(visitor);
         this.beaconManager.applicationDidLaunch();
