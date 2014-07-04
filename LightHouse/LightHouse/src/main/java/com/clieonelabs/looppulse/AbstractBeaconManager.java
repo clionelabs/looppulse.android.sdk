@@ -7,7 +7,7 @@ package com.clieonelabs.looppulse;
 /**
  * Created by simon on 6/6/14.
  */
-public abstract class BeaconManager {
+public abstract class AbstractBeaconManager {
 
     abstract public void applicationDidLaunch();
 

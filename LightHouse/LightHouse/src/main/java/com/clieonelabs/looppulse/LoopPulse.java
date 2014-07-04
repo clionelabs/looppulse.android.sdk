@@ -7,6 +7,9 @@ package com.clieonelabs.looppulse;
 import android.app.Application;
 import android.content.Context;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class LoopPulse {
 
     public static final String EVENT_DID_ENTER_REGION = "LP_EVENT_DID_ENTER_REGION";
@@ -21,9 +24,13 @@ public class LoopPulse {
     private String clientID;
     private DataStore dataStore;
     private Visitor visitor;
-    private BeaconManager beaconManager;
+    private AbstractBeaconManager beaconManager;
 
     public LoopPulse(Application application, String token, String clientID) {
+        this(application, token, clientID, new HashMap<String, Object>());
+    }
+
+    public LoopPulse(Application application, String token, String clientID, Map<String, Object> options) {
         if (token == null || token.length() == 0) {
             throw new IllegalArgumentException("token argument cannot be empty");
         }
@@ -36,7 +43,12 @@ public class LoopPulse {
         this.clientID = clientID;
         this.dataStore = new DataStore(context, clientID);
         this.visitor = new Visitor(context);
-        this.beaconManager = new RadiusNetworksBeaconManager(application, dataStore);
+        if (options.containsKey("provider") && options.get("provider").equals("radiusNetwork")) {
+            this.beaconManager = new RadiusNetworksBeaconManager(application, dataStore);
+        }
+        else {  // default is "estimote"
+            this.beaconManager = new EstimoteBeaconManager(application, dataStore);
+        }
 
         this.dataStore.registerVisitor(visitor);
         this.beaconManager.applicationDidLaunch();

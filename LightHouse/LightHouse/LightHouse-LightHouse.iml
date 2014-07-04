@@ -74,6 +74,7 @@
     <orderEntry type="library" exported="" name="AndroidProximityLibrary-1.1.1" level="project" />
     <orderEntry type="library" exported="" name="firebase-client-jvm-1.0.15" level="project" />
     <orderEntry type="library" exported="" name="AndroidIBeaconLibrary" level="project" />
+    <orderEntry type="library" exported="" name="estimote-sdk-preview-0.4.2" level="project" />
   </component>
 </module>
 

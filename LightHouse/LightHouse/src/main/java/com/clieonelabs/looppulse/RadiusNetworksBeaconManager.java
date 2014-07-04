@@ -25,9 +25,9 @@ import java.util.Collection;
 /**
  * Created by simon on 6/6/14.
  */
-public class RadiusNetworksBeaconManager extends BeaconManager implements BootstrapNotifier, RangeNotifier, IBeaconConsumer {
+public class RadiusNetworksBeaconManager extends AbstractBeaconManager implements BootstrapNotifier, RangeNotifier, IBeaconConsumer {
 
-    public static final String TAG = "LoopPuslse";
+    public static final String TAG = "LoopPulse";
     private final Application application;
     private final Context context;
     private final DataStore dataStore;
@@ -37,6 +37,12 @@ public class RadiusNetworksBeaconManager extends BeaconManager implements Bootst
     private IBeaconManager beaconManager;
     private boolean shouldStartMonitoring;
     private boolean shouldStartRanging;
+
+    public interface EventsListener {
+        public void logEnterRegion(Region region);
+        public void logExitRegion(Region region);
+        public void logRangeBeaconInRegion(IBeacon beacon, Region region);
+    }
 
     public RadiusNetworksBeaconManager(Application application, DataStore dataStore) {
         this.application = application;

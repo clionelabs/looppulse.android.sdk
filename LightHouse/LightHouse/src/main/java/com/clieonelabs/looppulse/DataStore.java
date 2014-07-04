@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.estimote.sdk.Beacon;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -23,7 +24,7 @@ import java.util.HashMap;
 /**
  * Created by simon on 6/6/14.
  */
-public class DataStore {
+public class DataStore implements RadiusNetworksBeaconManager.EventsListener, EstimoteBeaconManager.EventsListener {
 
     private final Context context;
     private final String clientID;
@@ -75,6 +76,8 @@ public class DataStore {
 
     }
 
+    // Implements RadiusNetworksBeaconManager.EventsListener
+
     public void logEnterRegion(Region region) {
         Date createdAt = new Date();
         Intent intent = new Intent(LoopPulse.EVENT_DID_ENTER_REGION);
@@ -119,6 +122,60 @@ public class DataStore {
 
         createBeaconEvent(intent, createdAt);
     }
+
+    // Implements EstimoteBeaconManager.EventsListener
+
+    public void logEnterEstimoteRegion(com.estimote.sdk.Region region)
+    {
+        Date createdAt = new Date();
+        Intent intent = new Intent(LoopPulse.EVENT_DID_ENTER_REGION);
+        intent.putExtra("created_at", createdAt.toString());
+        intent.putExtra("major", region.getMajor());
+        intent.putExtra("minor", region.getMinor());
+        intent.putExtra("uuid", region.getProximityUUID());
+        intent.putExtra("type", "didEnterRegion");
+        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
+        createBeaconEvent(intent, createdAt);
+    }
+
+    public void logExitEstimoteRegion(com.estimote.sdk.Region region)
+    {
+        Date createdAt = new Date();
+        Intent intent = new Intent(LoopPulse.EVENT_DID_EXIT_REGION);
+        intent.putExtra("created_at", createdAt.toString());
+        intent.putExtra("major", region.getMajor());
+        intent.putExtra("minor", region.getMinor());
+        intent.putExtra("uuid", region.getProximityUUID());
+        intent.putExtra("type", "didExitRegion");
+        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
+        createBeaconEvent(intent, createdAt);
+
+    }
+
+    public void logRangeEstimoteBeaconInRegion(Beacon beacon, com.estimote.sdk.Region region)
+    {
+        Date createdAt = new Date();
+        Intent intent = new Intent(LoopPulse.EVENT_DID_RANGE_BEACONS);
+        //intent.putExtra("accuracy");
+        intent.putExtra("created_at", createdAt);
+        intent.putExtra("major", beacon.getMajor());
+        intent.putExtra("minor", beacon.getMinor());
+        intent.putExtra("proximity", beacon.getMeasuredPower());
+        intent.putExtra("rssi", beacon.getRssi());
+        intent.putExtra("uuid", beacon.getProximityUUID());
+        intent.putExtra("type", "didRangeBeacons");
+        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
+        createBeaconEvent(intent, createdAt);
+    }
+
+
+    // Helper methods
 
     protected void createBeaconEvent(Intent intent, Date createdAt) {
         Firebase eventRef = beaconEventsRef.push();
