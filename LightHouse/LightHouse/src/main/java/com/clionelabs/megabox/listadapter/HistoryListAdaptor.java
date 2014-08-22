@@ -29,6 +29,11 @@ public class HistoryListAdaptor extends BaseAdapter {
         this.mContext = context;
     }
 
+    public void setHistories(List<History> mHistories) {
+        this.mHistories = mHistories;
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getCount() {
         return mHistories.size();
@@ -56,15 +61,23 @@ public class HistoryListAdaptor extends BaseAdapter {
             historyListItemViewHolder.mTvBody = (TextView) convertView.findViewById(R.id.mTvProductName);
             historyListItemViewHolder.mTvTime = (TextView) convertView.findViewById(R.id.mTvTime);
             historyListItemViewHolder.mTvDuration = (TextView) convertView.findViewById(R.id.mTvDuration);
-
+            historyListItemViewHolder.mTvDurationUnit = (TextView) convertView.findViewById(R.id.mTvDurationUnit);
         } else {
             historyListItemViewHolder = (HistoryListItemViewHolder) convertView.getTag();
         }
 
         historyListItemViewHolder.mIvType.setImageResource(history.getHistoryDrawableId());
-        historyListItemViewHolder.mTvBody.setText(history.getBody());
+        historyListItemViewHolder.mTvBody.setText(history.getDescription());
         historyListItemViewHolder.mTvTime.setText(history.getTimeString());
-        historyListItemViewHolder.mTvDuration.setText(history.getDuration());
+
+        if (history.getDurationInSeconds() != null) {
+            historyListItemViewHolder.mTvDuration.setText(history.getDuration());
+            historyListItemViewHolder.mTvDuration.setVisibility(View.VISIBLE);
+            historyListItemViewHolder.mTvDurationUnit.setVisibility(View.VISIBLE);
+        } else {
+            historyListItemViewHolder.mTvDuration.setVisibility(View.GONE);
+            historyListItemViewHolder.mTvDurationUnit.setVisibility(View.GONE);
+        }
 
         convertView.setTag(historyListItemViewHolder);
 
@@ -76,5 +89,6 @@ public class HistoryListAdaptor extends BaseAdapter {
         public TextView mTvBody;
         public TextView mTvTime;
         public TextView mTvDuration;
+        public TextView mTvDurationUnit;
     }
 }
