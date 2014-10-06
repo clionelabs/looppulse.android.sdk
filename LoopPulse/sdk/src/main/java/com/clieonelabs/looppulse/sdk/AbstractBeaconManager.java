@@ -5,15 +5,29 @@
 package com.clieonelabs.looppulse.sdk;
 
 /**
- * Created by simon on 6/6/14.
+ * Created by hiukim on 2014-10-07.
  */
 public abstract class AbstractBeaconManager {
+    protected enum Status {INACTIVE, READY, MONITORING}
+    protected Status status;
 
-    abstract public void applicationDidLaunch();
+    public AbstractBeaconManager() {
+        status = Status.INACTIVE;
+    }
 
-    abstract public void startLocationMonitoring();
+    public void initialize() {
+        if (status != Status.INACTIVE) throw new RuntimeException("Beacon Manager has already been initialized");
+        status = Status.READY;
+    }
 
-    abstract public void stopLocationMonitoringAndRanging();
+    public void startLocationMonitoring() {
+        if (status == Status.INACTIVE) throw new RuntimeException("Beacon Manager is Inactive");
+        if (status == Status.MONITORING) throw new RuntimeException("Beacon Manager is already monitoring");
+        status = Status.MONITORING;
+    }
 
-    abstract public void startLocationMonitoringAndRanging();
+    public void stopLocationMonitoring() {
+        if (status != Status.MONITORING) throw new RuntimeException("Beacon Manager is not currently monitoring");
+        status = Status.READY;
+    }
 }

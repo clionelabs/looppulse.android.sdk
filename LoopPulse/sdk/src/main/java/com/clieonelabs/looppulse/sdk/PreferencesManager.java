@@ -15,6 +15,7 @@ public class PreferencesManager {
     public static final String PARSE_CLIENT_KEY = "PARSE_CLIENT_KEY";
     public static final String PARSE_REST_KEY = "PARSE_REST_KEY";
     public static final String FIREBASE_TOKEN = "FIREBASE_TOKEN";
+    public static final String FIREBASE_ROOT_URL = "FIREBASE_ROOT";
     public static final String FIREBASE_BEACON_EVENTS_URL = "FIREBASE_BEACON_EVENTS_URL";
     public static final String FIREBASE_ENGAGEMENT_EVENTS_URL = "FIREBASE_ENGAGEMENT_EVENTS_URL";
     public static final String FIREBASE_VISITOR_EVENTS_URL = "FIREBASE_VISITOR_EVENTS_URL";
@@ -42,6 +43,7 @@ public class PreferencesManager {
         editor.putString(PARSE_CLIENT_KEY, result.parseClientKey);
         editor.putString(PARSE_REST_KEY, result.parseRestKey);
         editor.putString(FIREBASE_TOKEN, result.firebaseToken);
+        editor.putString(FIREBASE_ROOT_URL, result.firebaseRoot);
         editor.putString(FIREBASE_BEACON_EVENTS_URL, result.firebaseBeaconEventsURL);
         editor.putString(FIREBASE_ENGAGEMENT_EVENTS_URL, result.firebaseEngagementEventsURL);
         editor.putString(FIREBASE_VISITOR_EVENTS_URL, result.firebaseVisitorEventsURL);
@@ -50,5 +52,25 @@ public class PreferencesManager {
 
     public String getParseApplicationId() {
         return mContext.getSharedPreferences(PREF_NAME, 0).getString(PARSE_APPLICATION_ID, null);
+    }
+
+    public String getFirebaseToken() {
+        return mContext.getSharedPreferences(PREF_NAME, 0).getString(FIREBASE_TOKEN, null);
+    }
+
+    public String getFirebaseRootUrl() {
+        return mContext.getSharedPreferences(PREF_NAME, 0).getString(FIREBASE_ROOT_URL, null);
+    }
+
+    public String getFirebaseBeaconEventsUrl() {
+        return mContext.getSharedPreferences(PREF_NAME, 0).getString(FIREBASE_BEACON_EVENTS_URL, null);
+    }
+
+    public String getFirebaseEngagementEventsUrl() {
+        return mContext.getSharedPreferences(PREF_NAME, 0).getString(FIREBASE_ENGAGEMENT_EVENTS_URL, null);
+    }
+
+    public String getFirebaseVisitorEventsUrl() {
+        return mContext.getSharedPreferences(PREF_NAME, 0).getString(FIREBASE_VISITOR_EVENTS_URL, null);
     }
 }

@@ -1,11 +1,8 @@
 package com.clieonelabs.looppulse.sdk;
 
-import android.app.Application;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-
-import com.firebase.client.Firebase;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -25,13 +22,8 @@ import java.util.Map;
  */
 public class LoopPulse {
     public static final String TAG = "LoopPulse";
-    public static final String EVENT_DID_ENTER_REGION = "LP_EVENT_DID_ENTER_REGION";
-    public static final String EVENT_DID_EXIT_REGION = "LP_EVENT_EXIT_REGION";
-    public static final String EVENT_DID_RANGE_BEACONS = "LP_EVENT_DID_RANGE_BEACONS";
-
     public static final String AUTH_URL = "http://192.168.0.101:3000/api/authenticate/applications/";
 
-    private Application application;
     private LoopPulseListener loopPulseListener;
     private Context context;
     private String token;
@@ -41,11 +33,21 @@ public class LoopPulse {
     private AbstractBeaconManager beaconManager;
     private PreferencesManager preferencesManager;
 
-    public LoopPulse(Application application, LoopPulseListener loopPulseListener, String token, String clientID) {
-        this(application, loopPulseListener, token, clientID, new HashMap<String, Object>());
+    private int initializationsMask;
+    private boolean initializationEncounteredError;
+    private enum Initialization {
+        DATASTORE, BEACON_MANAGER;
+
+        public int value() {
+            return 1 << ordinal();
+        }
     }
 
-    public LoopPulse(Application application, LoopPulseListener loopPulseListener, String token, String clientID, Map<String, Object> options) {
+    public LoopPulse(Context context, LoopPulseListener loopPulseListener, String token, String clientID) {
+        this(context, loopPulseListener, token, clientID, new HashMap<String, Object>());
+    }
+
+    public LoopPulse(Context context, LoopPulseListener loopPulseListener, String token, String clientID, Map<String, Object> options) {
         Log.d(TAG, "Initializing LoopPulse. clientID: " + clientID + ", token:" + token);
 
         if (token == null || token.length() == 0) {
@@ -54,9 +56,9 @@ public class LoopPulse {
         if (clientID == null || clientID.length() == 0) {
             throw new IllegalArgumentException("clientID argument cannot be empty");
         }
-        this.application = application;
+        this.context = context;
+        this.visitor = new Visitor(context);
         this.loopPulseListener = loopPulseListener;
-        this.context = application.getApplicationContext();
         this.preferencesManager = PreferencesManager.getInstance(this.context);
         this.token = token;
         this.clientID = clientID;
@@ -64,37 +66,67 @@ public class LoopPulse {
         (new AuthTask()).execute((Void) null);
     }
 
-    public String[] getAvailableEvents() {
-        return new String[] { EVENT_DID_ENTER_REGION, EVENT_DID_EXIT_REGION, EVENT_DID_RANGE_BEACONS };
-    }
-
     public void startLocationMonitoring() {
+        if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
         beaconManager.startLocationMonitoring();
     }
 
-    public void stopLocationMonitoringAndRanging() {
-        beaconManager.stopLocationMonitoringAndRanging();
+    public void stopLocationMonitoring() {  // debug
+        if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
+        beaconManager.stopLocationMonitoring();
     }
 
-    public void startLocationMonitoringAndRanging() {  // debug
-        beaconManager.startLocationMonitoringAndRanging();
+    public void identifyVisitorWithExternalId(String externalId) {
+        if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
+        visitor.setExternalID(externalId);
     }
 
+    private void initDataStore() {
+        HashMap<String, String> firebaseURLs = new HashMap<String, String>();
 
-    private void initFromPreferences() {
-        Firebase.setAndroidContext(this.context);
+        String firebaseToken = preferencesManager.getFirebaseToken();
+        firebaseURLs.put("root", preferencesManager.getFirebaseRootUrl());
+        firebaseURLs.put("beacon_events", preferencesManager.getFirebaseBeaconEventsUrl());
+        firebaseURLs.put("visitor_events", preferencesManager.getFirebaseVisitorEventsUrl());
+        firebaseURLs.put("engagement_events", preferencesManager.getFirebaseEngagementEventsUrl());
+        this.dataStore = new DataStore(context, visitor, firebaseToken, firebaseURLs, new DataStoreResultHandler() {
+            @Override
+            public void onAuthenticated() {
+                initialized(Initialization.DATASTORE);
+            }
 
-        //        this.dataStore = new DataStore(context, clientID);
-//        this.visitor = new Visitor(context);
+            @Override
+            public void onAuthenticationError() {
+                if (!initializationEncounteredError) {
+                    loopPulseListener.onAuthenticationError("Failed to connect Firebase data store");
+                    initializationEncounteredError = true;
+                }
+            }
+        });
+    }
+
+    private void initBeaconManager() {
+        //        this.visitor = new Visitor(context);
 
         // Default beaconManager is estimote
 //        this.beaconManager = new EstimoteBeaconManager(application, dataStore);
-        this.beaconManager = new FakeBeaconManager(application, dataStore);
+        this.beaconManager = new FakeBeaconManager(context, dataStore);
 
 //        this.dataStore.registerVisitor(visitor);
-        this.beaconManager.applicationDidLaunch();
+        this.beaconManager.initialize();
 
+        initialized(Initialization.BEACON_MANAGER);
+    }
 
+    private void initialized(Initialization flag) {
+        initializationsMask |= flag.value();
+        if (isInitialized()) {
+            loopPulseListener.onAuthenticated();
+        }
+    }
+
+    private boolean isInitialized() {
+        return (initializationsMask == (1 << Initialization.values().length) - 1);
     }
 
     private class AuthTask extends AsyncTask<Void, Void, String> {
@@ -128,26 +160,35 @@ public class LoopPulse {
 
         @Override
         protected void onPostExecute(String responseString) {
-            if (responseString == null) return;
+            if (responseString == null) {
+                loopPulseListener.onAuthenticationError("Failed to authenticate");
+                return;
+            }
+
             AuthResult result = new AuthResult(responseString);
+            if (!result.isAuthenticated) {
+                loopPulseListener.onAuthenticationError("Invalid clientID/Token");
+                return;
+            }
 
             Log.d(TAG, "isAuthenticated: " + result.isAuthenticated);
             Log.d(TAG, "parseApplicationId: " + result.parseApplicationId);
             Log.d(TAG, "parseClientKey: " + result.parseClientKey);
             Log.d(TAG, "parseRestKey: " + result.parseRestKey);
             Log.d(TAG, "firebaseToken: " + result.firebaseToken);
+            Log.d(TAG, "firebaseRoot: " + result.firebaseRoot);
             Log.d(TAG, "firebaseBeaconEventsURL: " + result.firebaseBeaconEventsURL);
             Log.d(TAG, "firebaseEngagementEventsURL: " + result.firebaseEngagementEventsURL);
             Log.d(TAG, "firebaseVisitorEventsURL: " + result.firebaseVisitorEventsURL);
-
             preferencesManager.updateWithAuthResult(result);
 
-            initFromPreferences();
-            loopPulseListener.didAuthenticated();
+            initDataStore();
+            initBeaconManager();
         }
 
         @Override
         protected void onCancelled() {
+            loopPulseListener.onAuthenticationError("Authentication terminated");
         }
     }
 }

@@ -17,6 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ ********************************************
+ **     THIS CLASS IS CURRENT NOT WORKING  **
+ ********************************************
+ *
  * Created by simon on 4/7/14.
  */
 public class EstimoteBeaconManager extends AbstractBeaconManager implements BeaconManager.RangingListener, BeaconManager.MonitoringListener {
@@ -58,7 +62,7 @@ public class EstimoteBeaconManager extends AbstractBeaconManager implements Beac
     }
 
     @Override
-    public void applicationDidLaunch() {
+    public void initialize() {
         beaconManager = new BeaconManager(context);
         beaconManager.setRangingListener(this);
         beaconManager.setMonitoringListener(this);
@@ -81,7 +85,7 @@ public class EstimoteBeaconManager extends AbstractBeaconManager implements Beac
         });
     }
 
-    @Override
+//    @Override
     public void startLocationMonitoringAndRanging() {
         beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
@@ -99,7 +103,7 @@ public class EstimoteBeaconManager extends AbstractBeaconManager implements Beac
         });
     }
 
-    @Override
+//    @Override
     public void stopLocationMonitoringAndRanging() {
         beaconManager.disconnect();
     }
@@ -109,13 +113,13 @@ public class EstimoteBeaconManager extends AbstractBeaconManager implements Beac
     @Override
     public void onEnteredRegion(Region region, List<Beacon> beacons) {
         Log.d(TAG, "onEnteredRegion: " + beacons);
-        dataStore.logEnterEstimoteRegion(region);
+//        dataStore.logEnterEstimoteRegion(region);
     }
 
     @Override
     public void onExitedRegion(Region region) {
         Log.d(TAG, "onExitedRegion: " + region);
-        dataStore.logExitEstimoteRegion(region);
+//        dataStore.logExitEstimoteRegion(region);
     }
 
     // Implements BeaconManager.RangingListener
@@ -124,7 +128,7 @@ public class EstimoteBeaconManager extends AbstractBeaconManager implements Beac
     public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
         Log.d(TAG, "onBeaconsDiscovered: " + beacons);
         for (Beacon beacon : beacons) {
-            dataStore.logRangeEstimoteBeaconInRegion(beacon, region);
+//            dataStore.logRangeEstimoteBeaconInRegion(beacon, region);
         }
     }
 }

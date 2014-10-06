@@ -6,6 +6,9 @@ import android.util.Log;
 import com.clieonelabs.looppulse.sdk.LoopPulse;
 import com.clieonelabs.looppulse.sdk.LoopPulseListener;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Created by hiukim on 2014-10-03.
  */
@@ -18,18 +21,32 @@ public class MegaBoxApplication extends Application implements LoopPulseListener
 
     public void onCreate() {
         super.onCreate();
-        loopPulse = new LoopPulse(this, this, APPLICATION_TOKEN, APPLICATION_ID);
+        loopPulse = new LoopPulse(this.getApplicationContext(), this, APPLICATION_TOKEN, APPLICATION_ID);
     }
 
     @Override
-    public void didAuthenticated() {
-        Log.d(TAG, "didAuthenticated()");
-        loopPulse.startLocationMonitoringAndRanging();
+    public void onAuthenticated() {
+        Log.d(TAG, "onAuthenticated()");
+        loopPulse.startLocationMonitoring();
+        loopPulse.identifyVisitorWithExternalId("external 123");
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                loopPulse.stopLocationMonitoring();
+            }
+        }, 10 * 1000);
 
 //        for (String event: loopPulse.getAvailableEvents()) {
 //            LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
 //                    new IntentFilter(event));
 //        }
+    }
+
+    @Override
+    public void onAuthenticationError(String msg) {
+        Log.d(TAG, "onAuthenticationError: " + msg);
     }
 
 //    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {

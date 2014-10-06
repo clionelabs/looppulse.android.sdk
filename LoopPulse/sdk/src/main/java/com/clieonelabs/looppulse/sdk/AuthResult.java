@@ -14,6 +14,7 @@ public class AuthResult {
     String parseRestKey;
 
     String firebaseToken;
+    String firebaseRoot;
     String firebaseBeaconEventsURL;
     String firebaseEngagementEventsURL;
     String firebaseVisitorEventsURL;
@@ -33,6 +34,7 @@ public class AuthResult {
                 parseRestKey = parseObject.getString("restKey");
 
                 firebaseToken = firebaseObject.getString("token");
+                firebaseRoot = firebaseObject.getString("root");
                 firebaseBeaconEventsURL = firebaseObject.getString("beacon_events");
                 firebaseEngagementEventsURL = firebaseObject.getString("engagement_events");
                 firebaseVisitorEventsURL = firebaseObject.getString("visitor_events");

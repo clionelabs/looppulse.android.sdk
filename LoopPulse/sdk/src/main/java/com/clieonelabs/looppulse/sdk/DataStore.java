@@ -5,136 +5,180 @@
 package com.clieonelabs.looppulse.sdk;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
+import com.clieonelabs.looppulse.sdk.model.BeaconEvent;
+import com.clieonelabs.looppulse.sdk.model.FirebaseEvent;
+import com.clieonelabs.looppulse.sdk.model.VisitorEvent;
 import com.estimote.sdk.Beacon;
-import com.firebase.client.DataSnapshot;
+import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.ServerValue;
-import com.firebase.client.ValueEventListener;
 
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Created by simon on 6/6/14.
+ * Created by hiukim on 2014-10-03.
  */
-public class DataStore implements EstimoteBeaconManager.EventsListener {
+public class DataStore { //implements EstimoteBeaconManager.EventsListener {
+    private static String TAG = DataStore.class.getCanonicalName();
 
-    private final Context context;
-    private final String clientID;
-    private final Firebase firebase;
+    private Firebase rootRef;
     private Firebase beaconEventsRef;
-    private Visitor latestVisitor;
+    private Firebase visitorEventsRef;
+    private Firebase engagementEventsRef;
+    private final Context context;
+    private Visitor visitor;
 
-    public DataStore(Context context, String clientID) {
+    public DataStore(Context context, Visitor visitor, String firebaseToken, Map<String, String> firebaseURLs, final DataStoreResultHandler resultHandler) {
         this.context = context;
-        this.clientID = clientID;
-        this.firebase = new Firebase("https://looppulse-dev.firebaseio.com/clients/" + clientID);
-        this.beaconEventsRef = this.firebase.child("beacon_events");
-    }
+        this.visitor = visitor;
 
-    public void registerVisitor(Visitor visitor) {
-        identifyVisitor(visitor);
-    }
+        Firebase.setAndroidContext(this.context);
+        this.rootRef = new Firebase(firebaseURLs.get("root"));
+        this.beaconEventsRef = new Firebase(firebaseURLs.get("beacon_events"));
+        this.visitorEventsRef = new Firebase(firebaseURLs.get("visitor_events"));
+        this.engagementEventsRef = new Firebase(firebaseURLs.get("engagement_events"));
 
-    public void identifyVisitor(Visitor visitor) {
-        final Firebase visitorsRef = firebase.child("visitors");
-        final Firebase visitorRef = visitorsRef.child(visitor.getUUID());
-        latestVisitor = visitor;
-
-        visitorRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        this.rootRef.authWithCustomToken(firebaseToken, new Firebase.AuthResultHandler() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() == null) {
-                    HashMap<String, Object> newVisitorInfo = new HashMap<String, Object>();
-                    newVisitorInfo.put("created_at", new Date().toString());
-                    newVisitorInfo.put("device_brand", latestVisitor.getDeviceBrand());
-                    newVisitorInfo.put("device_model", latestVisitor.getDeviceModel());
-                    newVisitorInfo.put("os_type", "android");
-                    newVisitorInfo.put("os_version", latestVisitor.getOSVersion());
-                    visitorRef.setValue(newVisitorInfo, ServerValue.TIMESTAMP);
-                }
-
-                if (latestVisitor.hasExternalID()) {
-                    HashMap<String, Object> visitorInfo = new HashMap<String, Object>();
-                    visitorInfo.put("external_id", latestVisitor.getExternalID());
-                    visitorRef.updateChildren(visitorInfo);
-                }
+            public void onAuthenticated(AuthData authData) {
+                Log.d(TAG, "firebase authenticated: " + authData);
+//                createTestBeaconEvent();
+                resultHandler.onAuthenticated();
             }
 
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Log.d("LoopPulse", "FirebaseError " + firebaseError.toString());
+            public void onAuthenticationError(FirebaseError firebaseError) {
+                Log.d(TAG, "firebase authentication error: " + firebaseError);
+                resultHandler.onAuthenticationError();
             }
         });
     }
 
-    // Implements EstimoteBeaconManager.EventsListener
-    public void logEnterEstimoteRegion(com.estimote.sdk.Region region)
-    {
-        Date createdAt = new Date();
-        Intent intent = new Intent(LoopPulse.EVENT_DID_ENTER_REGION);
-        intent.putExtra("created_at", createdAt.toString());
-        intent.putExtra("major", region.getMajor());
-        intent.putExtra("minor", region.getMinor());
-        intent.putExtra("uuid", region.getProximityUUID());
-        intent.putExtra("type", "didEnterRegion");
-        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
-//        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-
-        createBeaconEvent(intent, createdAt);
+    public void createBeaconEvent(Beacon beacon, BeaconEvent.EventType type) {
+        BeaconEvent beaconEvent = new BeaconEvent(beacon, type, visitor.getUUID(), new Date());
+        createFirebaseEvent(beaconEventsRef, beaconEvent);
     }
 
-    public void logExitEstimoteRegion(com.estimote.sdk.Region region)
-    {
-        Date createdAt = new Date();
-        Intent intent = new Intent(LoopPulse.EVENT_DID_EXIT_REGION);
-        intent.putExtra("created_at", createdAt.toString());
-        intent.putExtra("major", region.getMajor());
-        intent.putExtra("minor", region.getMinor());
-        intent.putExtra("uuid", region.getProximityUUID());
-        intent.putExtra("type", "didExitRegion");
-        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
-//        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-
-        createBeaconEvent(intent, createdAt);
-
+    public void identifyVisitorWithExternalId(String externalId) {
+        VisitorEvent visitorEvent = new VisitorEvent(VisitorEvent.EventType.IDENTIFY, visitor.getUUID(), externalId, new Date());
+        createFirebaseEvent(visitorEventsRef, visitorEvent);
     }
 
-    public void logRangeEstimoteBeaconInRegion(Beacon beacon, com.estimote.sdk.Region region)
-    {
-        Date createdAt = new Date();
-        Intent intent = new Intent(LoopPulse.EVENT_DID_RANGE_BEACONS);
-        //intent.putExtra("accuracy");
-        intent.putExtra("created_at", createdAt);
-        intent.putExtra("major", beacon.getMajor());
-        intent.putExtra("minor", beacon.getMinor());
-        intent.putExtra("proximity", beacon.getMeasuredPower());
-        intent.putExtra("rssi", beacon.getRssi());
-        intent.putExtra("uuid", beacon.getProximityUUID());
-        intent.putExtra("type", "didRangeBeacons");
-        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
-//        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-
-        createBeaconEvent(intent, createdAt);
-    }
-
-
-    // Helper methods
-
-    protected void createBeaconEvent(Intent intent, Date createdAt) {
-        Firebase eventRef = beaconEventsRef.push();
-        HashMap<String, Object> eventInfo = new HashMap<String, Object>();
-        for (String key : intent.getExtras().keySet()) {
-            Object value = intent.getExtras().get(key);
-            if (value != null) {
-                eventInfo.put(key, value);
+    private void createFirebaseEvent(Firebase firebaseRef, FirebaseEvent event) {
+        firebaseRef.push().setValue(event.toFirebaseObject(), new Firebase.CompletionListener() {
+            @Override
+            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                if (firebaseError != null) {
+                    Log.d(TAG, "Data could not be saved. " + firebaseError.getMessage());
+                } else {
+                    Log.d(TAG, "Data saved successfully.");
+                }
             }
-        }
-        eventRef.setValue(eventInfo, createdAt.getTime());
+        });
     }
+
+//    public void registerVisitor(Visitor visitor) {
+//        identifyVisitor(visitor);
+//    }
+//
+//    public void identifyVisitor(Visitor visitor) {
+//        final Firebase visitorsRef = firebase.child("visitors");
+//        final Firebase visitorRef = visitorsRef.child(visitor.getUUID());
+//        latestVisitor = visitor;
+//
+//        visitorRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.getValue() == null) {
+//                    HashMap<String, Object> newVisitorInfo = new HashMap<String, Object>();
+//                    newVisitorInfo.put("created_at", new Date().toString());
+//                    newVisitorInfo.put("device_brand", latestVisitor.getDeviceBrand());
+//                    newVisitorInfo.put("device_model", latestVisitor.getDeviceModel());
+//                    newVisitorInfo.put("os_type", "android");
+//                    newVisitorInfo.put("os_version", latestVisitor.getOSVersion());
+//                    visitorRef.setValue(newVisitorInfo, ServerValue.TIMESTAMP);
+//                }
+//
+//                if (latestVisitor.hasExternalID()) {
+//                    HashMap<String, Object> visitorInfo = new HashMap<String, Object>();
+//                    visitorInfo.put("external_id", latestVisitor.getExternalID());
+//                    visitorRef.updateChildren(visitorInfo);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//                Log.d("LoopPulse", "FirebaseError " + firebaseError.toString());
+//            }
+//        });
+//    }
+//
+//    // Implements EstimoteBeaconManager.EventsListener
+//    public void logEnterEstimoteRegion(com.estimote.sdk.Region region)
+//    {
+//        Date createdAt = new Date();
+//        Intent intent = new Intent(LoopPulse.EVENT_DID_ENTER_REGION);
+//        intent.putExtra("created_at", createdAt.toString());
+//        intent.putExtra("major", region.getMajor());
+//        intent.putExtra("minor", region.getMinor());
+//        intent.putExtra("uuid", region.getProximityUUID());
+//        intent.putExtra("type", "didEnterRegion");
+//        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
+////        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+//
+//        createBeaconEvent(intent, createdAt);
+//    }
+//
+//    public void logExitEstimoteRegion(com.estimote.sdk.Region region)
+//    {
+//        Date createdAt = new Date();
+//        Intent intent = new Intent(LoopPulse.EVENT_DID_EXIT_REGION);
+//        intent.putExtra("created_at", createdAt.toString());
+//        intent.putExtra("major", region.getMajor());
+//        intent.putExtra("minor", region.getMinor());
+//        intent.putExtra("uuid", region.getProximityUUID());
+//        intent.putExtra("type", "didExitRegion");
+//        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
+////        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+//
+//        createBeaconEvent(intent, createdAt);
+//
+//    }
+//
+//    public void logRangeEstimoteBeaconInRegion(Beacon beacon, com.estimote.sdk.Region region)
+//    {
+//        Date createdAt = new Date();
+//        Intent intent = new Intent(LoopPulse.EVENT_DID_RANGE_BEACONS);
+//        //intent.putExtra("accuracy");
+//        intent.putExtra("created_at", createdAt);
+//        intent.putExtra("major", beacon.getMajor());
+//        intent.putExtra("minor", beacon.getMinor());
+//        intent.putExtra("proximity", beacon.getMeasuredPower());
+//        intent.putExtra("rssi", beacon.getRssi());
+//        intent.putExtra("uuid", beacon.getProximityUUID());
+//        intent.putExtra("type", "didRangeBeacons");
+//        intent.putExtra("visitor_uuid", latestVisitor.getUUID());
+////        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+//
+//        createBeaconEvent(intent, createdAt);
+//    }
+//
+//
+//    // Helper methods
+//
+//    protected void createBeaconEvent(Intent intent, Date createdAt) {
+//        Firebase eventRef = beaconEventsRef.push();
+//        HashMap<String, Object> eventInfo = new HashMap<String, Object>();
+//        for (String key : intent.getExtras().keySet()) {
+//            Object value = intent.getExtras().get(key);
+//            if (value != null) {
+//                eventInfo.put(key, value);
+//            }
+//        }
+//        eventRef.setValue(eventInfo, createdAt.getTime());
+//    }
 
 }
