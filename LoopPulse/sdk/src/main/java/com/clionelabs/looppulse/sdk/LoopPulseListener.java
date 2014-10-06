@@ -1,4 +1,4 @@
-package com.clieonelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk;
 
 /**
  * Created by hiukim on 2014-10-04.

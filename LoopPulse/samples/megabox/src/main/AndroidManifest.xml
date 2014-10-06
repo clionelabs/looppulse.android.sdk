@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.clieonelabs.looppulse.samples.megabox" >
+    package="com.clionelabs.looppulse.samples.megabox" >
 
     <application
         android:name=".MegaBoxApplication"

@@ -1,9 +1,9 @@
-package com.clieonelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk;
 
 import android.content.Context;
 import android.util.Log;
 
-import com.clieonelabs.looppulse.sdk.model.BeaconEvent;
+import com.clionelabs.looppulse.sdk.model.BeaconEvent;
 import com.estimote.sdk.Beacon;
 
 import java.util.Timer;

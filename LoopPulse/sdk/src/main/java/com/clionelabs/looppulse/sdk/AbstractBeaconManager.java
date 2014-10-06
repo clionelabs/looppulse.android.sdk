@@ -2,7 +2,7 @@
  * Copyright (c) 2014 Clione Labs. All rights reserved.
  */
 
-package com.clieonelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk;
 
 /**
  * Created by hiukim on 2014-10-07.

@@ -1,4 +1,4 @@
-package com.clieonelabs.looppulse.samples.megabox;
+package com.clionelabs.looppulse.samples.megabox;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;

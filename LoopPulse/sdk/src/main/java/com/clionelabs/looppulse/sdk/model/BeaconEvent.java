@@ -1,4 +1,4 @@
-package com.clieonelabs.looppulse.sdk.model;
+package com.clionelabs.looppulse.sdk.model;
 
 import com.estimote.sdk.Beacon;
 

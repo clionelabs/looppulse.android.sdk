@@ -2,14 +2,14 @@
  * Copyright (c) 2014 Clione Labs. All rights reserved.
  */
 
-package com.clieonelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk;
 
 import android.content.Context;
 import android.util.Log;
 
-import com.clieonelabs.looppulse.sdk.model.BeaconEvent;
-import com.clieonelabs.looppulse.sdk.model.FirebaseEvent;
-import com.clieonelabs.looppulse.sdk.model.VisitorEvent;
+import com.clionelabs.looppulse.sdk.model.BeaconEvent;
+import com.clionelabs.looppulse.sdk.model.FirebaseEvent;
+import com.clionelabs.looppulse.sdk.model.VisitorEvent;
 import com.estimote.sdk.Beacon;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;

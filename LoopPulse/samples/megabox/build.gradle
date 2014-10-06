@@ -5,7 +5,7 @@ android {
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId "com.clieonelabs.looppulse.samples.megabox"
+        applicationId "com.clionelabs.looppulse.samples.megabox"
         minSdkVersion 15
         targetSdkVersion 20
         versionCode 1

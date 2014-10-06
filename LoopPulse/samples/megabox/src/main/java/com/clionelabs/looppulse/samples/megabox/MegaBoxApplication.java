@@ -1,10 +1,10 @@
-package com.clieonelabs.looppulse.samples.megabox;
+package com.clionelabs.looppulse.samples.megabox;
 
 import android.app.Application;
 import android.util.Log;
 
-import com.clieonelabs.looppulse.sdk.LoopPulse;
-import com.clieonelabs.looppulse.sdk.LoopPulseListener;
+import com.clionelabs.looppulse.sdk.LoopPulse;
+import com.clionelabs.looppulse.sdk.LoopPulseListener;
 
 import java.util.Timer;
 import java.util.TimerTask;

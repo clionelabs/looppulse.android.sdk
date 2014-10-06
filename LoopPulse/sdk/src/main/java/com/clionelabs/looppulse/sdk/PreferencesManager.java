@@ -1,4 +1,4 @@
-package com.clieonelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
