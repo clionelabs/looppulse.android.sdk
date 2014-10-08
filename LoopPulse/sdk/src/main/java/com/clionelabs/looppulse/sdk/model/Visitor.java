@@ -2,7 +2,7 @@
  * Copyright (c) 2014 Clione Labs. All rights reserved.
  */
 
-package com.clionelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk.model;
 
 import android.content.Context;
 

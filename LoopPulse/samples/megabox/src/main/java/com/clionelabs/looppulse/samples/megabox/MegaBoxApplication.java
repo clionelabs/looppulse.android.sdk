@@ -24,35 +24,30 @@ public class MegaBoxApplication extends Application implements LoopPulseListener
         loopPulse = new LoopPulse(this.getApplicationContext(), this, APPLICATION_TOKEN, APPLICATION_ID);
     }
 
-    @Override
-    public void onAuthenticated() {
-        Log.d(TAG, "onAuthenticated()");
-        loopPulse.startLocationMonitoring();
+    private void testIdentifyUser() {
         loopPulse.identifyVisitorWithExternalId("external 123");
+    }
 
+    private void testMonitoring() {
+        loopPulse.startLocationMonitoring();
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 loopPulse.stopLocationMonitoring();
             }
-        }, 10 * 1000);
+        }, 30 * 1000);
+    }
 
-//        for (String event: loopPulse.getAvailableEvents()) {
-//            LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
-//                    new IntentFilter(event));
-//        }
+    @Override
+    public void onAuthenticated() {
+        Log.d(TAG, "onAuthenticated()");
+        testIdentifyUser();
+        testMonitoring();
     }
 
     @Override
     public void onAuthenticationError(String msg) {
         Log.d(TAG, "onAuthenticationError: " + msg);
     }
-
-//    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            Log.d(TAG, "Got message: " + intent.getAction() + " uuid:" + intent.getStringExtra("uuid") + " major:" + intent.getIntExtra("major", -1) + " minor:" + intent.getIntExtra("minor", -1));
-//        }
-//    };
 }

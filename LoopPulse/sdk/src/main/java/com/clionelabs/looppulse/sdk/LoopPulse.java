@@ -1,8 +1,18 @@
 package com.clionelabs.looppulse.sdk;
 
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import com.clionelabs.looppulse.sdk.model.VisitorIdentifyEvent;
+import com.clionelabs.looppulse.sdk.receivers.RangingAlarmReceiver;
+import com.clionelabs.looppulse.sdk.services.DataStoreService;
+import com.clionelabs.looppulse.sdk.services.RangingService;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -16,28 +26,30 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
 
 /**
  * Created by hiukim on 2014-10-03.
  */
 public class LoopPulse {
     public static final String TAG = "LoopPulse";
-    public static final String AUTH_URL = "http://192.168.0.101:3000/api/authenticate/applications/";
+//    public static final String AUTH_URL = "http://192.168.0.101:3000/api/authenticate/applications/";
+    public static final String AUTH_URL = "http://localhost:8010/api/authenticate/applications/";
 
     private LoopPulseListener loopPulseListener;
     private Context context;
     private String token;
     private String clientID;
-    private DataStore dataStore;
-    private Visitor visitor;
-    private AbstractBeaconManager beaconManager;
     private PreferencesManager preferencesManager;
 
+    private BroadcastReceiver dataStoreServiceEventsReceiver;
+    private BroadcastReceiver rangingServiceEventsReceiver;
+
+    private final Object initializationLock = new Object();
     private int initializationsMask;
     private boolean initializationEncounteredError;
     private enum Initialization {
-        DATASTORE, BEACON_MANAGER;
-
+        DATASTORE, RANGING;
         public int value() {
             return 1 << ordinal();
         }
@@ -57,76 +69,94 @@ public class LoopPulse {
             throw new IllegalArgumentException("clientID argument cannot be empty");
         }
         this.context = context;
-        this.visitor = new Visitor(context);
         this.loopPulseListener = loopPulseListener;
         this.preferencesManager = PreferencesManager.getInstance(this.context);
         this.token = token;
         this.clientID = clientID;
 
         (new AuthTask()).execute((Void) null);
+
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (!bluetoothAdapter.isEnabled()) {
+            bluetoothAdapter.enable(); // asynchronous? make it more reliable?
+        }
+        // Enable Estimote Debug
+        com.estimote.sdk.utils.L.enableDebugLogging(true);
     }
 
     public void startLocationMonitoring() {
         if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
-        beaconManager.startLocationMonitoring();
+        RangingAlarmReceiver.setAlarm(context, 0);
     }
 
     public void stopLocationMonitoring() {  // debug
         if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
-        beaconManager.stopLocationMonitoring();
+        RangingAlarmReceiver.cancelAlarm(context);
     }
 
     public void identifyVisitorWithExternalId(String externalId) {
         if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
-        visitor.setExternalID(externalId);
+        VisitorIdentifyEvent event = new VisitorIdentifyEvent(externalId, new Date());
+        DataStoreService.startFireIdentifyVisitorAction(context, event);
     }
 
-    private void initDataStore() {
-        HashMap<String, String> firebaseURLs = new HashMap<String, String>();
+    private void onAuthenticated() {
+        initDataStoreService();
+        initRangingService();
+    }
 
-        String firebaseToken = preferencesManager.getFirebaseToken();
-        firebaseURLs.put("root", preferencesManager.getFirebaseRootUrl());
-        firebaseURLs.put("beacon_events", preferencesManager.getFirebaseBeaconEventsUrl());
-        firebaseURLs.put("visitor_events", preferencesManager.getFirebaseVisitorEventsUrl());
-        firebaseURLs.put("engagement_events", preferencesManager.getFirebaseEngagementEventsUrl());
-        this.dataStore = new DataStore(context, visitor, firebaseToken, firebaseURLs, new DataStoreResultHandler() {
+    private void initDataStoreService() {
+        dataStoreServiceEventsReceiver = new BroadcastReceiver() {
             @Override
-            public void onAuthenticated() {
-                initialized(Initialization.DATASTORE);
-            }
-
-            @Override
-            public void onAuthenticationError() {
-                if (!initializationEncounteredError) {
-                    loopPulseListener.onAuthenticationError("Failed to connect Firebase data store");
-                    initializationEncounteredError = true;
+            public void onReceive(Context context, Intent intent) {
+                int eventType = intent.getIntExtra(DataStoreService.BROADCAST_EVENT_TYPE, -1);
+                Log.d(TAG, "receiging dataStoreService broadcast message: " + eventType);
+                if (eventType == DataStoreService.EventType.INIT_SUCCESS.ordinal()) {
+                    initialized(Initialization.DATASTORE);
+                } else if (eventType == DataStoreService.EventType.INIT_FAIL.ordinal()) {
+                    if (!initializationEncounteredError) {
+                        loopPulseListener.onAuthenticationError("Failed to connect Firebase data store");
+                        initializationEncounteredError = true;
+                    }
                 }
             }
-        });
+        };
+        LocalBroadcastManager.getInstance(this.context).registerReceiver(
+                dataStoreServiceEventsReceiver, new IntentFilter(DataStoreService.BROADCAST_EVENT));
+
+        DataStoreService.startAction(context, DataStoreService.ActionType.INIT);
     }
 
-    private void initBeaconManager() {
-        //        this.visitor = new Visitor(context);
+    private void initRangingService() {
+        rangingServiceEventsReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int eventType = intent.getIntExtra(RangingService.BROADCAST_EVENT_TYPE, -1);
+                Log.d(TAG, "receiging rangingService broadcast message: " + eventType);
+                if (eventType == RangingService.EventType.INIT_SUCCESS.ordinal()) {
+                    initialized(Initialization.RANGING);
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this.context).registerReceiver(
+                rangingServiceEventsReceiver, new IntentFilter(RangingService.BROADCAST_EVENT));
 
-        // Default beaconManager is estimote
-//        this.beaconManager = new EstimoteBeaconManager(application, dataStore);
-        this.beaconManager = new FakeBeaconManager(context, dataStore);
-
-//        this.dataStore.registerVisitor(visitor);
-        this.beaconManager.initialize();
-
-        initialized(Initialization.BEACON_MANAGER);
+        RangingService.startAction(context, RangingService.ActionType.INIT);
     }
 
     private void initialized(Initialization flag) {
-        initializationsMask |= flag.value();
+        synchronized (initializationLock) {
+            initializationsMask |= flag.value();
+        }
         if (isInitialized()) {
             loopPulseListener.onAuthenticated();
         }
     }
 
     private boolean isInitialized() {
-        return (initializationsMask == (1 << Initialization.values().length) - 1);
+        synchronized (initializationLock) {
+            return (initializationsMask == (1 << Initialization.values().length) - 1);
+        }
     }
 
     private class AuthTask extends AsyncTask<Void, Void, String> {
@@ -182,8 +212,7 @@ public class LoopPulse {
             Log.d(TAG, "firebaseVisitorEventsURL: " + result.firebaseVisitorEventsURL);
             preferencesManager.updateWithAuthResult(result);
 
-            initDataStore();
-            initBeaconManager();
+            onAuthenticated();
         }
 
         @Override

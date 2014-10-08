@@ -9,7 +9,7 @@ import android.content.SharedPreferences;
 public class PreferencesManager {
     private static final String TAG = PreferencesManager.class.getSimpleName();
 
-    public static final String PREF_NAME = "com.clieonelabs.looppulse";
+    public static final String PREF_NAME = "com.clionelabs.looppulse";
 
     public static final String PARSE_APPLICATION_ID = "PARSE_APPLICATION_ID";
     public static final String PARSE_CLIENT_KEY = "PARSE_CLIENT_KEY";
