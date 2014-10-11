@@ -1,1 +1,1 @@
-include ':sdk', ':samples:megabox'
+include ':sdk', ':samples:megabox', ':sdktest'

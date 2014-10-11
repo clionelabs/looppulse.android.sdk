@@ -11,6 +11,7 @@ import com.clionelabs.looppulse.sdk.services.RangingService;
 
 public class RangingAlarmReceiver extends WakefulBroadcastReceiver {
     private static String TAG = RangingAlarmReceiver.class.getCanonicalName();
+    public static String RANGE_ACTION_INTENT = "com.clionelabs.looppulse.sdk.action.RANGE";
 
     public RangingAlarmReceiver() {
     }
@@ -26,29 +27,15 @@ public class RangingAlarmReceiver extends WakefulBroadcastReceiver {
 
     public static void setAlarm(Context context, int delaySec) {
         AlarmManager am = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, RangingAlarmReceiver.class);
+        Intent intent = new Intent(RANGE_ACTION_INTENT);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
         am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delaySec * 1000, pi);
     }
 
     public static void cancelAlarm(Context context) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, RangingAlarmReceiver.class);
+        Intent intent = new Intent(RANGE_ACTION_INTENT);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
         am.cancel(pi);
     }
-
-//    public static void setAlarm(Context context) {
-//        AlarmManager am = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-//        Intent i = new Intent(context, RangingAlarmReceiver.class);
-//        PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, 0);
-//        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 1000 * 60 * 10, pi); // Millisec * Second * Minute
-//    }
-//
-//    public static void cancelAlarm(Context context) {
-//        Intent intent = new Intent(context, RangingAlarmReceiver.class);
-//        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
-//        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-//        alarmManager.cancel(sender);
-//    }
 }

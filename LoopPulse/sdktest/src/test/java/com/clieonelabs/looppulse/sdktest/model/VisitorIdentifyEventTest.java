@@ -1,16 +1,26 @@
-package com.clionelabs.looppulse.sdk.test.model;
+package com.clieonelabs.looppulse.sdktest.model;
 
+import com.clieonelabs.looppulse.sdktest.SDKTestRunner;
 import com.clionelabs.looppulse.sdk.model.VisitorIdentifyEvent;
 
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 
 import java.lang.reflect.Field;
 import java.util.Date;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 /**
- * Created by hiukim on 2014-10-10.
+ * Created by hiukim on 2014-10-12.
  */
-public class VisitorIdentifyEventTest extends TestCase {
+
+@RunWith(SDKTestRunner.class)
+@Config(emulateSdk = 18) // Robolectric only support SDK up to 18 at this moment, but our SDK use 20
+public class VisitorIdentifyEventTest {
 
     Field externalIDField;
     Field createdAtField;
@@ -18,7 +28,8 @@ public class VisitorIdentifyEventTest extends TestCase {
     String externalId = "DUMMY_EXTERNAL_ID";
     Date now = new Date();
 
-    protected void setUp() {
+    @Before
+    public void setUp() {
         try {
             externalIDField = VisitorIdentifyEvent.class.getDeclaredField("externalID");
             createdAtField = VisitorIdentifyEvent.class.getDeclaredField("createdAt");
@@ -29,6 +40,7 @@ public class VisitorIdentifyEventTest extends TestCase {
         }
     }
 
+    @Test
     public void testConstructor() {
         VisitorIdentifyEvent event = new VisitorIdentifyEvent(externalId, now);
         helpValidateEventFields(event);

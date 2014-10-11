@@ -1,20 +1,30 @@
-package com.clionelabs.looppulse.sdk.test.model;
+package com.clieonelabs.looppulse.sdktest.model;
 
 import android.os.Parcel;
 
+import com.clieonelabs.looppulse.sdktest.SDKTestRunner;
 import com.clionelabs.looppulse.sdk.model.BeaconEvent;
 import com.estimote.sdk.Beacon;
 
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.HashMap;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 /**
- * Created by hiukim on 2014-10-09.
+ * Created by hiukim on 2014-10-12.
  */
-public class BeaconEventTest extends TestCase {
+
+@RunWith(SDKTestRunner.class)
+@Config(emulateSdk = 18) // Robolectric only support SDK up to 18 at this moment, but our SDK use 20
+public class BeaconEventTest {
     private static final String TAG = BeaconEventTest.class.getCanonicalName();
     Field majorField;
     Field minorField;
@@ -33,7 +43,8 @@ public class BeaconEventTest extends TestCase {
     Date now = new Date();
     Beacon beacon;
 
-    protected void setUp() {
+    @Before
+    public void setUp() {
         try {
             majorField = BeaconEvent.class.getDeclaredField("major");
             minorField = BeaconEvent.class.getDeclaredField("minor");
@@ -56,11 +67,13 @@ public class BeaconEventTest extends TestCase {
         }
     }
 
+    @Test
     public void testConstructor() {
         BeaconEvent event = new BeaconEvent(beacon, BeaconEvent.EventType.ENTER, now);
         helpValidateEventFields(event);
     }
 
+    @Test
     public void testParcelable() {
         Parcel parcel = Parcel.obtain();
         BeaconEvent event = new BeaconEvent(beacon, BeaconEvent.EventType.ENTER, now);
@@ -72,6 +85,7 @@ public class BeaconEventTest extends TestCase {
         helpValidateEventFields(outEvent);
     }
 
+    @Test
     public void testToFirebaseObject() {
         String visitorUUID = "DUMMY_visitorUUID";
         BeaconEvent event = new BeaconEvent(beacon, BeaconEvent.EventType.ENTER, now);

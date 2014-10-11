@@ -20,6 +20,10 @@
             android:name="com.clionelabs.looppulse.sdk.receivers.RangingAlarmReceiver"
             android:enabled="true"
             android:exported="true" >
+            <intent-filter>
+                <action android:name="com.clionelabs.looppulse.sdk.action.RANGE">
+                </action>
+            </intent-filter>
         </receiver>
 
         <service
