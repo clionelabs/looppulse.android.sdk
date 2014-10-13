@@ -1,4 +1,4 @@
-package com.clieonelabs.looppulse.sdktest;
+package com.clionelabs.looppulse.sdktest;
 
 import com.clionelabs.looppulse.sdk.LoopPulse;
 

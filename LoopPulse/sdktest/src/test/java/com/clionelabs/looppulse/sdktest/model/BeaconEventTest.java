@@ -1,8 +1,8 @@
-package com.clieonelabs.looppulse.sdktest.model;
+package com.clionelabs.looppulse.sdktest.model;
 
 import android.os.Parcel;
 
-import com.clieonelabs.looppulse.sdktest.SDKTestRunner;
+import com.clionelabs.looppulse.sdktest.SDKTestRunner;
 import com.clionelabs.looppulse.sdk.model.BeaconEvent;
 import com.estimote.sdk.Beacon;
 

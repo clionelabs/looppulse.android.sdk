@@ -19,7 +19,7 @@
         <receiver
             android:name="com.clionelabs.looppulse.sdk.receivers.RangingAlarmReceiver"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="false" >
             <intent-filter>
                 <action android:name="com.clionelabs.looppulse.sdk.action.RANGE">
                 </action>

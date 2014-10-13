@@ -1,13 +1,13 @@
-package com.clieonelabs.looppulse.sdktest.receivers;
+package com.clionelabs.looppulse.sdktest.receivers;
 
 import android.app.AlarmManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.clieonelabs.looppulse.sdktest.SDKTestRunner;
 import com.clionelabs.looppulse.sdk.receivers.RangingAlarmReceiver;
 import com.clionelabs.looppulse.sdk.services.RangingService;
+import com.clionelabs.looppulse.sdktest.SDKTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +87,8 @@ public class RangingAlarmReceiverTest {
         Intent serviceIntent = Robolectric.getShadowApplication().peekNextStartedService();
         assertEquals("Expected the RangingService service to be invoked",
                 RangingService.class.getCanonicalName(), serviceIntent.getComponent().getClassName());
+        assertEquals("Expected Range Action",
+                RangingService.ActionType.RANGE.toString(), serviceIntent.getAction());
     }
 
     @Test
