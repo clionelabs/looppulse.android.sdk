@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.clionelabs.looppulse.sdk.datastore.BeaconEvent;
 import com.clionelabs.looppulse.sdk.services.LoopPulseServiceBroadcaster;
 import com.clionelabs.looppulse.sdk.services.LoopPulseServiceExecutor;
 
@@ -54,6 +55,9 @@ public class LoopPulse {
                     loopPulseListener.onMonitoringStarted();
                 } else if (eventType.equals(LoopPulseServiceBroadcaster.MONITORING_STOPPED)) {
                     loopPulseListener.onMonitoringStopped();
+                } else if (eventType.equals(LoopPulseServiceBroadcaster.BEACON_DETECTED)) {
+                    BeaconEvent event = intent.getParcelableExtra(LoopPulseServiceBroadcaster.EXTRA_BEACON_EVENT);
+                    loopPulseListener.onBeaconDetected(event);
                 }
             }
         };

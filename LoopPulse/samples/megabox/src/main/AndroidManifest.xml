@@ -3,7 +3,6 @@
     package="com.clionelabs.looppulse.samples.megabox" >
 
     <application
-        android:name=".MegaBoxApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"

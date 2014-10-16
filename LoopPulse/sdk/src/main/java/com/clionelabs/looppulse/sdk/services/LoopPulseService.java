@@ -141,6 +141,7 @@ public class LoopPulseService extends Service {
             @Override
             public Void call() throws Exception {
                 monitorHelper.stopRanging();
+                LoopPulseServiceBroadcaster.sendMonitoringStopped(context);
                 return null;
             }
         });
@@ -176,6 +177,7 @@ public class LoopPulseService extends Service {
                         Log.d(TAG, "onBeaconEntered " + beacon);
                         BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.ENTER, new Date());
                         dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
+                        LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
                     }
 
                     @Override
@@ -183,6 +185,7 @@ public class LoopPulseService extends Service {
                         Log.d(TAG, "onBeaconExited " + beacon);
                         BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.EXIT, new Date());
                         dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
+                        LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
                     }
 
                     @Override
