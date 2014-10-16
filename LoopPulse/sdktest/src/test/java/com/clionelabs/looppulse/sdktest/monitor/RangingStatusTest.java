@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdktest.model;
+package com.clionelabs.looppulse.sdktest.monitor;
 
 import com.clionelabs.looppulse.sdk.monitor.RangingStatus;
 import com.clionelabs.looppulse.sdktest.SDKTestRunner;

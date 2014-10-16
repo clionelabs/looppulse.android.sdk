@@ -72,9 +72,9 @@ public class LoopPulseService extends Service {
         } else if (action.equals(ActionType.IDENTIFY_USER.toString())) {
             execIdentifyUser(intent);
         } else if (action.equals(ActionType.ENTER_GEOFENCE.toString())) {
-
+            execActionEnterGeofence(intent);
         } else if (action.equals(ActionType.EXIT_GEOFENCE.toString())) {
-
+            execActionExitGeofence(intent);
         } else {
             Log.d(TAG, "unrecognized action");
         }
@@ -154,7 +154,16 @@ public class LoopPulseService extends Service {
                 return null;
             }
         });
+    }
 
+    private void execActionExitGeofence(Intent intent) {
+        execActionWithRequiredHelpers(new Helper[] {monitorHelper}, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                monitorHelper.exitGeofence();
+                return null;
+            }
+        });
     }
 
     private void execActionDoRanging(Intent intent) {

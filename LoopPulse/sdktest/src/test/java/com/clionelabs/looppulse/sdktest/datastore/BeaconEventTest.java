@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdktest.model;
+package com.clionelabs.looppulse.sdktest.datastore;
 
 import android.os.Parcel;
 

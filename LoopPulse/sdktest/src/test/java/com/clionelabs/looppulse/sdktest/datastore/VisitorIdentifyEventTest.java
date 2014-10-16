@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdktest.model;
+package com.clionelabs.looppulse.sdktest.datastore;
 
 import com.clionelabs.looppulse.sdktest.SDKTestRunner;
 import com.clionelabs.looppulse.sdk.datastore.VisitorIdentifyEvent;
