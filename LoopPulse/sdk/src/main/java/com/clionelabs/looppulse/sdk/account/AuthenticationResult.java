@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk.account;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -6,20 +6,20 @@ import org.json.JSONObject;
 /**
  * Created by hiukim on 2014-10-04.
  */
-public class AuthResult {
-    boolean isAuthenticated;
+public class AuthenticationResult {
+    public boolean isAuthenticated;
 
-    String parseApplicationId;
-    String parseClientKey;
-    String parseRestKey;
+    public String parseApplicationId;
+    public String parseClientKey;
+    public String parseRestKey;
 
-    String firebaseToken;
-    String firebaseRoot;
-    String firebaseBeaconEventsURL;
-    String firebaseEngagementEventsURL;
-    String firebaseVisitorEventsURL;
+    public String firebaseToken;
+    public String firebaseRoot;
+    public String firebaseBeaconEventsURL;
+    public String firebaseEngagementEventsURL;
+    public String firebaseVisitorEventsURL;
 
-    public AuthResult(String responseString) {
+    public AuthenticationResult(String responseString) {
         try {
             JSONObject jsonObject = new JSONObject(responseString);
             isAuthenticated = jsonObject.getBoolean("authenticated");

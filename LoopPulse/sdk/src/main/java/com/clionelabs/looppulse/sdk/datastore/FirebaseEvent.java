@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdk.model;
+package com.clionelabs.looppulse.sdk.datastore;
 
 import java.util.HashMap;
 

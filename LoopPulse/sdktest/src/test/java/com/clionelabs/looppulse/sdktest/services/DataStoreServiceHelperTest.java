@@ -1,5 +1,6 @@
 package com.clionelabs.looppulse.sdktest.services;
 
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
@@ -14,6 +15,10 @@ import org.robolectric.annotation.Config;
 public class DataStoreServiceHelperTest {
 
     //TODO: testInit (Constructor)
+    @Test
+    public void testInit() {
+
+    }
 
     //TODO: testCreateFirebaseBeaconEvent
 

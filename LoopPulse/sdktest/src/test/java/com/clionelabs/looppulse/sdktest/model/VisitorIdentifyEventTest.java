@@ -1,7 +1,7 @@
 package com.clionelabs.looppulse.sdktest.model;
 
 import com.clionelabs.looppulse.sdktest.SDKTestRunner;
-import com.clionelabs.looppulse.sdk.model.VisitorIdentifyEvent;
+import com.clionelabs.looppulse.sdk.datastore.VisitorIdentifyEvent;
 
 import org.junit.Before;
 import org.junit.Test;

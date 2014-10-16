@@ -3,7 +3,7 @@ package com.clionelabs.looppulse.sdktest.model;
 import android.os.Parcel;
 
 import com.clionelabs.looppulse.sdktest.SDKTestRunner;
-import com.clionelabs.looppulse.sdk.model.BeaconEvent;
+import com.clionelabs.looppulse.sdk.datastore.BeaconEvent;
 import com.estimote.sdk.Beacon;
 
 import org.junit.Before;

@@ -1,6 +1,6 @@
 package com.clionelabs.looppulse.sdktest.model;
 
-import com.clionelabs.looppulse.sdk.services.RangingStatus;
+import com.clionelabs.looppulse.sdk.monitor.RangingStatus;
 import com.clionelabs.looppulse.sdktest.SDKTestRunner;
 import com.estimote.sdk.Beacon;
 

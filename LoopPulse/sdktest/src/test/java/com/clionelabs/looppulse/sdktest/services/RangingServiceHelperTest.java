@@ -2,7 +2,7 @@ package com.clionelabs.looppulse.sdktest.services;
 
 import com.clionelabs.looppulse.sdk.services.RangingServiceHelper;
 import com.clionelabs.looppulse.sdk.services.RangingServiceHelperListener;
-import com.clionelabs.looppulse.sdk.services.RangingStatus;
+import com.clionelabs.looppulse.sdk.monitor.RangingStatus;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 

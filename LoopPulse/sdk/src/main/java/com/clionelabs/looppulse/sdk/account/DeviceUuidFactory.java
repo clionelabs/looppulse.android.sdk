@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014 Clione Labs. All rights reserved.
  */
-package com.clionelabs.looppulse.sdk.util;
+package com.clionelabs.looppulse.sdk.account;
 
 import android.content.Context;
 import android.content.SharedPreferences;

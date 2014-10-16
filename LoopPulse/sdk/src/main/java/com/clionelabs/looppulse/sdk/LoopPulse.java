@@ -1,223 +1,78 @@
 package com.clionelabs.looppulse.sdk;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.clionelabs.looppulse.sdk.model.VisitorIdentifyEvent;
-import com.clionelabs.looppulse.sdk.receivers.RangingAlarmReceiver;
-import com.clionelabs.looppulse.sdk.services.DataStoreService;
-import com.clionelabs.looppulse.sdk.services.RangingService;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Date;
+import com.clionelabs.looppulse.sdk.services.LoopPulseServiceBroadcaster;
+import com.clionelabs.looppulse.sdk.services.LoopPulseServiceExecutor;
 
 /**
- * Created by hiukim on 2014-10-03.
+ * Created by hiukim on 2014-10-16.
+ *
+ * This is the API class of the SDK
+ * This class serves two purposes:
+ *      1) observe LocalBroadcast from LoopPulseService, and send feedback back to the client app via the listener.
+ *      2) accept API calls from client app, and start relevant LoopPulseService actions.
+ *
+ * Noted that this is supposed to be instance object created from the client app, and will get destroyed anytime. e.g. If the client
+ * app created this class in an Activity, then this instance will be destroyed together with the Activity. So anything that
+ * require persistence should goes into the LoopPulseService (which is a long-lasting background service).
  */
 public class LoopPulse {
-    public static final String TAG = "LoopPulse";
-//    public static final String AUTH_URL = "http://192.168.0.101:3000/api/authenticate/applications/";
-    public static final String AUTH_URL = "http://localhost:8010/api/authenticate/applications/";
+    private static String TAG = LoopPulse.class.getCanonicalName();
 
-    private LoopPulseListener loopPulseListener;
     private Context context;
-    private String token;
-    private String clientID;
-    private PreferencesManager preferencesManager;
+    private LoopPulseListener loopPulseListener;
+    private BroadcastReceiver loopPulseServiceEventsReceiver;
 
-    private BroadcastReceiver dataStoreServiceEventsReceiver;
-    private BroadcastReceiver rangingServiceEventsReceiver;
-
-    private final Object initializationLock = new Object();
-    private int initializationsMask;
-    private boolean initializationEncounteredError;
-    private enum Initialization {
-        DATASTORE, RANGING;
-        public int value() {
-            return 1 << ordinal();
-        }
-    }
-
-    public LoopPulse(Context context, LoopPulseListener loopPulseListener, String token, String clientID) {
-        this(context, loopPulseListener, token, clientID, new HashMap<String, Object>());
-    }
-
-    public LoopPulse(Context context, LoopPulseListener loopPulseListener, String token, String clientID, Map<String, Object> options) {
-        Log.d(TAG, "Initializing LoopPulse. clientID: " + clientID + ", token:" + token);
-
-        if (token == null || token.length() == 0) {
-            throw new IllegalArgumentException("token argument cannot be empty");
-        }
-        if (clientID == null || clientID.length() == 0) {
-            throw new IllegalArgumentException("clientID argument cannot be empty");
-        }
+    public LoopPulse(Context context, LoopPulseListener loopPulseListener) {
         this.context = context;
         this.loopPulseListener = loopPulseListener;
-        this.preferencesManager = PreferencesManager.getInstance(this.context);
-        this.token = token;
-        this.clientID = clientID;
+        init();
 
-        (new AuthTask()).execute((Void) null);
-
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (!bluetoothAdapter.isEnabled()) {
-            bluetoothAdapter.enable(); // asynchronous? make it more reliable?
-        }
         // Enable Estimote Debug
         com.estimote.sdk.utils.L.enableDebugLogging(true);
     }
 
-    public void startLocationMonitoring() {
-        if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
-        RangingAlarmReceiver.setAlarm(context, 0);
-    }
-
-    public void stopLocationMonitoring() {  // debug
-        if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
-        RangingAlarmReceiver.cancelAlarm(context);
-    }
-
-    public void identifyVisitorWithExternalId(String externalId) {
-        if (!isInitialized()) throw new RuntimeException("LoopPulse is not initialized yet.");
-        VisitorIdentifyEvent event = new VisitorIdentifyEvent(externalId, new Date());
-        DataStoreService.startFireIdentifyVisitorAction(context, event);
-    }
-
-    private void onAuthenticated() {
-        initDataStoreService();
-        initRangingService();
-    }
-
-    private void initDataStoreService() {
-        dataStoreServiceEventsReceiver = new BroadcastReceiver() {
+    public void init() {
+        loopPulseServiceEventsReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int eventType = intent.getIntExtra(DataStoreService.BROADCAST_EVENT_TYPE, -1);
-                Log.d(TAG, "receiging dataStoreService broadcast message: " + eventType);
-                if (eventType == DataStoreService.EventType.INIT_SUCCESS.ordinal()) {
-                    initialized(Initialization.DATASTORE);
-                } else if (eventType == DataStoreService.EventType.INIT_FAIL.ordinal()) {
-                    if (!initializationEncounteredError) {
-                        loopPulseListener.onAuthenticationError("Failed to connect Firebase data store");
-                        initializationEncounteredError = true;
-                    }
+                String eventType = intent.getStringExtra(LoopPulseServiceBroadcaster.EXTRA_BROADCAST_EVENT);
+                Log.d(TAG, "receiving LoopPulseService broadcast message: " + eventType);
+                if (eventType.equals(LoopPulseServiceBroadcaster.AUTHENTICATED)) {
+                    loopPulseListener.onAuthenticated();
+                } else if (eventType.equals(LoopPulseServiceBroadcaster.AUTHENTICATION_ERROR)) {
+                    String msg = intent.getStringExtra(LoopPulseServiceBroadcaster.EXTRA_MSG);
+                    loopPulseListener.onAuthenticationError(msg);
+                } else if (eventType.equals(LoopPulseServiceBroadcaster.MONITORING_STARTED)) {
+                    loopPulseListener.onMonitoringStarted();
+                } else if (eventType.equals(LoopPulseServiceBroadcaster.MONITORING_STOPPED)) {
+                    loopPulseListener.onMonitoringStopped();
                 }
             }
         };
-        LocalBroadcastManager.getInstance(this.context).registerReceiver(
-                dataStoreServiceEventsReceiver, new IntentFilter(DataStoreService.BROADCAST_EVENT));
-
-        DataStoreService.startAction(context, DataStoreService.ActionType.INIT);
+        LocalBroadcastManager.getInstance(context).registerReceiver(
+                loopPulseServiceEventsReceiver, new IntentFilter(LoopPulseServiceBroadcaster.INTENT_NAME));
     }
 
-    private void initRangingService() {
-        rangingServiceEventsReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                int eventType = intent.getIntExtra(RangingService.BROADCAST_EVENT_TYPE, -1);
-                Log.d(TAG, "receiging rangingService broadcast message: " + eventType);
-                if (eventType == RangingService.EventType.INIT_SUCCESS.ordinal()) {
-                    initialized(Initialization.RANGING);
-                }
-            }
-        };
-        LocalBroadcastManager.getInstance(this.context).registerReceiver(
-                rangingServiceEventsReceiver, new IntentFilter(RangingService.BROADCAST_EVENT));
-
-        RangingService.startAction(context, RangingService.ActionType.INIT);
+    public void authenticate(String appID, String appToken) {
+        LoopPulseServiceExecutor.startActionAuth(context, appID, appToken);
     }
 
-    private void initialized(Initialization flag) {
-        synchronized (initializationLock) {
-            initializationsMask |= flag.value();
-        }
-        if (isInitialized()) {
-            loopPulseListener.onAuthenticated();
-        }
+    public void startMonitoring() {
+        LoopPulseServiceExecutor.startActionStartMonitoring(context);
     }
 
-    private boolean isInitialized() {
-        synchronized (initializationLock) {
-            return (initializationsMask == (1 << Initialization.values().length) - 1);
-        }
+    public void stopMonitoring() {
+        LoopPulseServiceExecutor.startActionStopMonitoring(context);
     }
 
-    private class AuthTask extends AsyncTask<Void, Void, String> {
-        @Override
-        protected String doInBackground(Void... params) {
-            try {
-                HttpClient httpclient = new DefaultHttpClient();
-                HttpGet get = new HttpGet(AUTH_URL + clientID);
-                get.setHeader("x-auth-token", token);
-                HttpResponse response = httpclient.execute(get);
-
-                StatusLine statusLine = response.getStatusLine();
-                Log.d(TAG, "status: " + statusLine.getStatusCode());
-                if(statusLine.getStatusCode() == HttpStatus.SC_OK){
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    response.getEntity().writeTo(out);
-                    out.close();
-                    String responseString = out.toString();
-                    Log.d(TAG, "response: " + responseString);
-                    return responseString;
-                } else {
-                    response.getEntity().getContent().close(); // Closes the connection.
-                }
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String responseString) {
-            if (responseString == null) {
-                loopPulseListener.onAuthenticationError("Failed to authenticate");
-                return;
-            }
-
-            AuthResult result = new AuthResult(responseString);
-            if (!result.isAuthenticated) {
-                loopPulseListener.onAuthenticationError("Invalid clientID/Token");
-                return;
-            }
-
-            Log.d(TAG, "isAuthenticated: " + result.isAuthenticated);
-            Log.d(TAG, "parseApplicationId: " + result.parseApplicationId);
-            Log.d(TAG, "parseClientKey: " + result.parseClientKey);
-            Log.d(TAG, "parseRestKey: " + result.parseRestKey);
-            Log.d(TAG, "firebaseToken: " + result.firebaseToken);
-            Log.d(TAG, "firebaseRoot: " + result.firebaseRoot);
-            Log.d(TAG, "firebaseBeaconEventsURL: " + result.firebaseBeaconEventsURL);
-            Log.d(TAG, "firebaseEngagementEventsURL: " + result.firebaseEngagementEventsURL);
-            Log.d(TAG, "firebaseVisitorEventsURL: " + result.firebaseVisitorEventsURL);
-            preferencesManager.updateWithAuthResult(result);
-
-            onAuthenticated();
-        }
-
-        @Override
-        protected void onCancelled() {
-            loopPulseListener.onAuthenticationError("Authentication terminated");
-        }
+    public void identifyUser(String externalID) {
+        LoopPulseServiceExecutor.startActionIdentifyUser(context, externalID);
     }
 }

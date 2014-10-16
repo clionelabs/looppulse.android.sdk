@@ -1,7 +1,9 @@
-package com.clionelabs.looppulse.sdk;
+package com.clionelabs.looppulse.sdk.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import com.clionelabs.looppulse.sdk.account.AuthenticationResult;
 
 /**
  * Created by hiukim on 2014-10-04.
@@ -36,7 +38,7 @@ public class PreferencesManager {
         settings.edit().clear().commit();
     }
 
-    public void updateWithAuthResult(AuthResult result) {
+    public void updateWithAuthResult(AuthenticationResult result) {
         SharedPreferences settings = mContext.getSharedPreferences(PREF_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(PARSE_APPLICATION_ID, result.parseApplicationId);
