@@ -35,7 +35,8 @@ public class LoopPulse {
         init();
 
         // Enable Estimote Debug
-        com.estimote.sdk.utils.L.enableDebugLogging(true);
+//        com.estimote.sdk.utils.L.enableDebugLogging(true);
+        com.estimote.sdk.utils.L.enableDebugLogging(false);
     }
 
     public void init() {

@@ -14,6 +14,7 @@ public class RangingStatus {
     private HashMap<String, Beacon> beaconsWithinMap; // key -> beacon
     private HashMap<String, Beacon> currentRangedBeaconsMap; // key -> beacon
     private Date lastActiveTime;
+    private Date lastEnterGeofenceTime;
 
     public RangingStatus() {
         beaconsWithinMap = new HashMap<String, Beacon>(); // key -> beacon
@@ -79,6 +80,18 @@ public class RangingStatus {
                 currentRangedBeaconsMap.put(key, beacon);
             }
         }
+    }
+
+    public void enteredGeofence() {
+        lastEnterGeofenceTime = new Date();
+    }
+
+    public void exitedGeofence() {
+        lastEnterGeofenceTime = null;
+    }
+
+    public Date getLastEnterGeofenceTime() {
+        return lastEnterGeofenceTime;
     }
 
     public Date getLastActiveTime() {

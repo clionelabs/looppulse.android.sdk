@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdk.geofence;
+package com.clionelabs.looppulse.sdk.monitor;
 
 import com.google.android.gms.location.Geofence;
 

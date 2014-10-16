@@ -22,10 +22,6 @@
             android:exported="false" />
 
         <service
-            android:name="com.clionelabs.looppulse.sdk.services.ReceiveTransitionsIntentService"
-            android:exported="false" >
-        </service>
-        <service
             android:name="com.clionelabs.looppulse.sdk.services.LoopPulseService"
             android:enabled="true"
             android:exported="false" >

@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdk.geofence;
+package com.clionelabs.looppulse.sdk.monitor;
 
 import android.app.PendingIntent;
 import android.content.Context;

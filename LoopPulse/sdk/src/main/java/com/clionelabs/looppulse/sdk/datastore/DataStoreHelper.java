@@ -3,51 +3,41 @@ package com.clionelabs.looppulse.sdk.datastore;
 import android.content.Context;
 import android.util.Log;
 
+import com.clionelabs.looppulse.sdk.services.Helper;
+import com.clionelabs.looppulse.sdk.services.HelperListener;
 import com.clionelabs.looppulse.sdk.util.PreferencesManager;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 /**
  * Created by hiukim on 2014-10-16.
  */
-public class DataStoreHelper {
+public class DataStoreHelper implements Helper {
     private static String TAG = DataStoreHelper.class.getCanonicalName();
 
     private Context context;
     private PreferencesManager preferencesManager;
-    private boolean isFirebaseAuthenticated;
     private String visitorUUID;
     private Firebase rootRef;
     private Firebase beaconEventsRef;
     private Firebase visitorEventsRef;
     private Firebase engagementEventsRef;
-    private ArrayList<FirebaseAuthenticationListener> authListeners;
-    private final Object isAuthenticatingLock = new Object();
-    private boolean isAuthenticating;
+    private boolean isReady;
 
     public DataStoreHelper(Context context, PreferencesManager preferencesManager, String visitorUUID) {
         this.context = context;
         this.preferencesManager = preferencesManager;
         this.visitorUUID = visitorUUID;
-        this.isFirebaseAuthenticated = false;
-        this.authListeners = new ArrayList<FirebaseAuthenticationListener>();
+        this.isReady = false;
     }
 
-    public void authenticateFirebase(final FirebaseAuthenticationListener listener) {
-        if (isFirebaseAuthenticated) {
-            listener.onAuthenticated(true);
+    @Override
+    public void setup(final HelperListener listener) {
+        if (isReady) {
+            listener.onReady();
             return;
         }
-
-        authListeners.add(listener);
-        if (getIsAuthenticating()) {
-            return;
-        }
-        setIsAuthenticating(true);
 
         Firebase.setAndroidContext(context);
         this.rootRef = new Firebase(preferencesManager.getFirebaseRootUrl());
@@ -59,25 +49,14 @@ public class DataStoreHelper {
             @Override
             public void onAuthenticated(AuthData authData) {
                 Log.d(TAG, "firebase authenticated: " + authData);
-                isFirebaseAuthenticated = true;
-                Iterator<FirebaseAuthenticationListener> iterator = authListeners.iterator();
-                while (iterator.hasNext()) {
-                    FirebaseAuthenticationListener listener = iterator.next();
-                    listener.onAuthenticated(true);
-                    iterator.remove();
-                }
-
+                isReady = true;
+                listener.onReady();
             }
 
             @Override
             public void onAuthenticationError(FirebaseError firebaseError) {
                 Log.d(TAG, "firebase authentication error: " + firebaseError);
-                Iterator<FirebaseAuthenticationListener> iterator = authListeners.iterator();
-                while (iterator.hasNext()) {
-                    FirebaseAuthenticationListener listener = iterator.next();
-                    listener.onAuthenticated(false);
-                    iterator.remove();
-                }
+                listener.onError();
             }
         });
     }
@@ -90,8 +69,8 @@ public class DataStoreHelper {
         createFirebaseEvent(visitorEventsRef, event);
     }
 
-    private void createFirebaseEvent(Firebase firebaseRef, FirebaseEvent event) {
-        if (!isFirebaseAuthenticated) {
+    private void createFirebaseEvent(Firebase firebaseRef, final FirebaseEvent event) {
+        if (!isReady) {
             Log.e(TAG, "Firebase not authenticated yet");
             return;
         }
@@ -102,21 +81,9 @@ public class DataStoreHelper {
                 if (firebaseError != null) {
                     Log.d(TAG, "Data could not be saved. " + firebaseError.getMessage());
                 } else {
-                    Log.d(TAG, "Data saved successfully.");
+                    Log.d(TAG, "Data saved successfully: " + event.toFirebaseObject(visitorUUID));
                 }
             }
         });
-    }
-
-    private boolean getIsAuthenticating() {
-        synchronized (isAuthenticatingLock) {
-            return isAuthenticating;
-        }
-    }
-
-    private void setIsAuthenticating(boolean isAuthenticating) {
-        synchronized (isAuthenticatingLock) {
-            this.isAuthenticating = isAuthenticating;
-        }
     }
 }
