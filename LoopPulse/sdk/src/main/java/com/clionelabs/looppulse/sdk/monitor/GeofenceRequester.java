@@ -19,6 +19,7 @@ import com.google.android.gms.location.LocationClient.OnAddGeofencesResultListen
 import com.google.android.gms.location.LocationStatusCodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class GeofenceRequester implements OnAddGeofencesResultListener, ConnectionCallbacks, OnConnectionFailedListener {
     private static String TAG = GeofenceRequester.class.getCanonicalName();
@@ -92,9 +93,9 @@ public class GeofenceRequester implements OnAddGeofencesResultListener, Connecti
     @Override
     public void onAddGeofencesResult(int statusCode, String[] geofenceRequestIds) {
         if (LocationStatusCodes.SUCCESS == statusCode) {
-            Log.d(TAG, "geoFenceAdded successful");
+            Log.d(TAG, "geoFenceAdded successful: " + Arrays.toString(geofenceRequestIds));
         } else {
-            Log.d(TAG, "geoFenceAdded failed");
+            Log.d(TAG, "geoFenceAdded failed: " + Arrays.toString(geofenceRequestIds));
         }
         // Disconnect the location client
         requestDisconnection();

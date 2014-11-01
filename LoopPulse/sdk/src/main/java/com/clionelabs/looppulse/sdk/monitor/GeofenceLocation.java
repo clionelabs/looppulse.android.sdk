@@ -18,6 +18,10 @@ public class GeofenceLocation {
         this.radius = radius;
     }
 
+    public String getRequiestId() {
+        return requiestId;
+    }
+
     public Geofence makeGeofence() {
         return new Geofence.Builder()
                 .setRequestId(requiestId)

@@ -12,6 +12,7 @@ import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationClient.OnRemoveGeofencesResultListener;
 import com.google.android.gms.location.LocationStatusCodes;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -95,9 +96,9 @@ public class GeofenceRemover implements ConnectionCallbacks, OnConnectionFailedL
     @Override
     public void onRemoveGeofencesByRequestIdsResult(int statusCode, String[] geofenceRequestIds) {
         if (LocationStatusCodes.SUCCESS == statusCode) {
-            Log.d(TAG, "geoFenceRemove successful");
+            Log.d(TAG, "geoFenceRemove successful: " + Arrays.toString(geofenceRequestIds));
         } else {
-            Log.d(TAG, "geoFenceRemove failed");
+            Log.d(TAG, "geoFenceRemove failed: " + Arrays.toString(geofenceRequestIds));
         }
         requestDisconnection();
     }

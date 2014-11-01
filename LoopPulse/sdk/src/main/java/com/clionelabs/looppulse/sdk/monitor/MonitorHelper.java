@@ -6,8 +6,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.clionelabs.looppulse.sdk.services.Helper;
-import com.clionelabs.looppulse.sdk.services.HelperListener;
+import com.clionelabs.looppulse.sdk.auth.AuthenticationResult;
 import com.clionelabs.looppulse.sdk.services.LoopPulseServiceExecutor;
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -21,7 +20,7 @@ import java.util.Date;
 /**
  * Created by hiukim on 2014-10-16.
  */
-public class MonitorHelper implements Helper {
+public class MonitorHelper {
     private static String TAG = MonitorHelper.class.getCanonicalName();
 
     private static int RANGE_PERIOD_SEC = 5;
@@ -36,28 +35,27 @@ public class MonitorHelper implements Helper {
     private BluetoothAdapter bluetoothAdapter;
     private boolean isMonitoring = false;
     private boolean isReady;
+    private ArrayList<GeofenceLocation> geofenceLocations;
 
     // TODO: The following values should read from server configuration. here might be multiple geofence regions as well.
-    private final String GEOFENCE_requestId = "1";
-    private final double GEOFENCE_latitude = 22.286763;
-    private final double GEOFENCE_longitude = 114.190319;
-    private final float GEOFENCE_radius = 50.0f;
+//    private final String GEOFENCE_requestId = "1";
+//    private final double GEOFENCE_latitude = 22.286763;
+//    private final double GEOFENCE_longitude = 114.190319;
+//    private final float GEOFENCE_radius = 50.0f;
 
     public MonitorHelper(Context context) {
         this.context = context;
         this.defaultRegion = new Region("LoopPulse-Generic", null, null, null); // TODO
         this.beaconManager = new BeaconManager(context);
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        this.geofenceLocations = new ArrayList<GeofenceLocation>();
         this.isReady = false;
     }
 
-    @Override
-    public void setup(final HelperListener listener) {
-        if (isReady) {
-            listener.onReady();
-            return;
+    public void setup(AuthenticationResult authenticationResult, final MonitorHelperSetupListener listener) {
+        for (GeofenceLocation geofenceLocation: authenticationResult.geofenceLocations) {
+            this.geofenceLocations.add(geofenceLocation);
         }
-
         beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
             public void onServiceReady() {
@@ -73,6 +71,10 @@ public class MonitorHelper implements Helper {
      * and decide whether an enter/exit events have occurred.
      */
     public void doRanging(final RangingListener listener) {
+        if (!isReady) {
+            Log.d(TAG, "BeaconManager is not connected yet.");
+            return;
+        }
         if (getIsRanging()) {
             Log.d(TAG, "Already Ranging");
             return;
@@ -113,9 +115,7 @@ public class MonitorHelper implements Helper {
 
         if (playServicesConnected()) {
             GeofenceRequester geofenceRequester = new GeofenceRequester(context);
-            ArrayList<GeofenceLocation> locations = new ArrayList<GeofenceLocation>();
-            locations.add(new GeofenceLocation(GEOFENCE_requestId, GEOFENCE_latitude, GEOFENCE_longitude, GEOFENCE_radius));
-            geofenceRequester.addGeofences(locations);
+            geofenceRequester.addGeofences(geofenceLocations);
         }
     }
 
@@ -145,7 +145,9 @@ public class MonitorHelper implements Helper {
         if (playServicesConnected()) {
             GeofenceRemover geofenceRemover = new GeofenceRemover(context);
             ArrayList<String> requestIds = new ArrayList<String>();
-            requestIds.add(GEOFENCE_requestId);
+            for (GeofenceLocation geofenceLocation: geofenceLocations) {
+                requestIds.add(geofenceLocation.getRequiestId());
+            }
             geofenceRemover.removeGeofencesById(requestIds);
         }
     }

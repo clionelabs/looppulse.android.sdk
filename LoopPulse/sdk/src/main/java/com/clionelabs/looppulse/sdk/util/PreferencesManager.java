@@ -3,7 +3,7 @@ package com.clionelabs.looppulse.sdk.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.clionelabs.looppulse.sdk.account.AuthenticationResult;
+import com.clionelabs.looppulse.sdk.auth.AuthenticationResult;
 
 /**
  * Created by hiukim on 2014-10-04.
@@ -12,6 +12,9 @@ public class PreferencesManager {
     private static final String TAG = PreferencesManager.class.getSimpleName();
 
     public static final String PREF_NAME = "com.clionelabs.looppulse";
+
+    public static final String APP_ID = "APP_ID";
+    public static final String APP_TOKEN = "APP_TOKEN";
 
     public static final String PARSE_APPLICATION_ID = "PARSE_APPLICATION_ID";
     public static final String PARSE_CLIENT_KEY = "PARSE_CLIENT_KEY";
@@ -31,6 +34,22 @@ public class PreferencesManager {
             instance.mContext = context;
         }
         return instance;
+    }
+
+    public void updateAuthInfo(String appID, String appToken) {
+        SharedPreferences settings = mContext.getSharedPreferences(PREF_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putString(APP_ID, appID);
+        editor.putString(APP_TOKEN, appToken);
+        editor.commit();
+    }
+
+    public String getAppId() {
+        return mContext.getSharedPreferences(PREF_NAME, 0).getString(APP_ID, null);
+    }
+
+    public String getAppToken() {
+        return mContext.getSharedPreferences(PREF_NAME, 0).getString(APP_TOKEN, null);
     }
 
     public void clearAll() {

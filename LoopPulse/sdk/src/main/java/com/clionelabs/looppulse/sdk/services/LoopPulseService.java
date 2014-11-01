@@ -6,21 +6,17 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.clionelabs.looppulse.sdk.account.AccountHelper;
-import com.clionelabs.looppulse.sdk.account.AuthenticationListener;
-import com.clionelabs.looppulse.sdk.account.DeviceUuidFactory;
+import com.clionelabs.looppulse.sdk.auth.AuthenticationListener;
+import com.clionelabs.looppulse.sdk.auth.AuthenticationManager;
 import com.clionelabs.looppulse.sdk.datastore.BeaconEvent;
 import com.clionelabs.looppulse.sdk.datastore.DataStoreHelper;
-import com.clionelabs.looppulse.sdk.datastore.VisitorIdentifyEvent;
 import com.clionelabs.looppulse.sdk.monitor.MonitorHelper;
 import com.clionelabs.looppulse.sdk.monitor.RangingListener;
+import com.clionelabs.looppulse.sdk.util.DeviceUuidFactory;
 import com.clionelabs.looppulse.sdk.util.PreferencesManager;
 import com.estimote.sdk.Beacon;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.concurrent.Callable;
 
 /**
  * The main component of LoopPulse SDK, which exists as a background service.
@@ -43,10 +39,10 @@ public class LoopPulseService extends Service {
 
     private String visitorUUID;
     private PreferencesManager preferencesManager;
-    private AccountHelper accountHelper;
+    private AuthenticationManager authenticationManager;
     private DataStoreHelper dataStoreHelper;
     private MonitorHelper monitorHelper;
-    private HelperAcquirer helperAcquirer;
+    private Visitor visitor;
     private Context context;
     private boolean isInitialized;
 
@@ -60,9 +56,45 @@ public class LoopPulseService extends Service {
 
         String action = intent.getAction();
         Log.d(TAG, "onStartCommand action: " + intent.getAction());
+
+        // It is supposed to be the first action received by LoopPulseService
         if (action.equals(ActionType.AUTH.toString())) {
             execActionAuth(intent);
-        } else if (action.equals(ActionType.START_MONITORING.toString())) {
+            return Service.START_REDELIVER_INTENT;
+        }
+
+        if (action.equals(ActionType.STOP_MONITORING.toString())) {
+            execActionStopMonitoring(intent);
+            return Service.START_NOT_STICKY;
+        }
+
+        // Actions required authentication action being done before.
+        if (authenticationManager.isAutenticated()) { // authenticated
+            startAuthenticatedAction(intent);
+        } else if (authenticationManager.isAuthInfoReady()) { // not authenticated, but contain auto info (probably because Service has been killed by system
+            Log.d(TAG, "Re-authenticating...");
+            final Intent fIntent = intent;
+            authenticationManager.auth(new AuthenticationListener() {
+                @Override
+                public void onAuthenticationError(String msg) {
+                    Log.d(TAG, "onAuthenticationError: " + msg);
+                }
+
+                @Override
+                public void onAuthenticated() {
+                    Log.d(TAG, "onAuthenticated");
+                    startAuthenticatedAction(fIntent);
+                }
+            });
+        } else { // not authenticated yet
+            Log.d(TAG, "Ignoring action " + action + "; Application has not yet been authenticated.");
+        }
+        return Service.START_NOT_STICKY;
+    }
+
+    private void startAuthenticatedAction(Intent intent) {
+        String action = intent.getAction();
+        if (action.equals(ActionType.START_MONITORING.toString())) {
             execActionStartMonitoring(intent);
         } else if (action.equals(ActionType.STOP_MONITORING.toString())) {
             execActionStopMonitoring(intent);
@@ -78,25 +110,26 @@ public class LoopPulseService extends Service {
         } else {
             Log.d(TAG, "unrecognized action");
         }
-        return Service.START_NOT_STICKY;
     }
 
     private void init() {
         if (isInitialized) return;
         context = this;
+        visitor = new Visitor(context);
         visitorUUID = new DeviceUuidFactory(context).getDeviceUuid().toString();
         preferencesManager = PreferencesManager.getInstance(this);
-        accountHelper = new AccountHelper(this, preferencesManager);
-        dataStoreHelper = new DataStoreHelper(this, preferencesManager, visitorUUID);
+        dataStoreHelper = new DataStoreHelper(this, preferencesManager, visitor);
         monitorHelper = new MonitorHelper(this);
-        helperAcquirer = new HelperAcquirer();
+        authenticationManager = new AuthenticationManager(this, dataStoreHelper, monitorHelper, preferencesManager, visitor);
         isInitialized = true;
     }
 
     private void execActionAuth(Intent intent) {
         String appID = intent.getStringExtra(EXTRA_AUTH_APP_ID);
         String appToken = intent.getStringExtra(EXTRA_AUTH_APP_TOKEN);
-        accountHelper.auth(appID, appToken, new AuthenticationListener() {
+        authenticationManager.setAuthInfo(appID, appToken);
+
+        authenticationManager.auth(new AuthenticationListener() {
             @Override
             public void onAuthenticationError(String msg) {
                 Log.d(TAG, "onAuthenticationError: " + msg);
@@ -112,107 +145,50 @@ public class LoopPulseService extends Service {
     }
 
     private void execIdentifyUser(final Intent intent) {
-        execActionWithRequiredHelpers(new Helper[] {dataStoreHelper}, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                String externalID = intent.getStringExtra(EXTRA_IDENTIFY_USER_EXTERNAL_ID);
-                VisitorIdentifyEvent event = accountHelper.identifyUser(externalID);
-                dataStoreHelper.createFirebaseVisitorIdentifyEvent(event);
-                return null;
-            }
-        });
+        String externalID = intent.getStringExtra(EXTRA_IDENTIFY_USER_EXTERNAL_ID);
+        dataStoreHelper.identifyUserWithExternalID(externalID);
     }
 
     private void execActionStartMonitoring(Intent intent) {
-        execActionWithRequiredHelpers(new Helper[] {dataStoreHelper, monitorHelper}, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                monitorHelper.startRanging();
-
-                Log.d(TAG, "Start Monitoring Ready");
-                LoopPulseServiceBroadcaster.sendMonitoringStarted(context);
-                return null;
-            }
-        });
+        monitorHelper.startRanging();
+        LoopPulseServiceBroadcaster.sendMonitoringStarted(context);
     }
 
     private void execActionStopMonitoring(Intent intent) {
-        execActionWithRequiredHelpers(new Helper[] {monitorHelper}, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                monitorHelper.stopRanging();
-                LoopPulseServiceBroadcaster.sendMonitoringStopped(context);
-                return null;
-            }
-        });
+        monitorHelper.stopRanging();
+        LoopPulseServiceBroadcaster.sendMonitoringStopped(context);
     }
 
     private void execActionEnterGeofence(Intent intent) {
-        execActionWithRequiredHelpers(new Helper[] {monitorHelper}, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                monitorHelper.enterGeofence();
-                return null;
-            }
-        });
+        monitorHelper.enterGeofence();
     }
 
     private void execActionExitGeofence(Intent intent) {
-        execActionWithRequiredHelpers(new Helper[] {monitorHelper}, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                monitorHelper.exitGeofence();
-                return null;
-            }
-        });
+        monitorHelper.exitGeofence();
     }
 
     private void execActionDoRanging(Intent intent) {
-        execActionWithRequiredHelpers(new Helper[] {monitorHelper}, new Callable<Void>() {
+        monitorHelper.doRanging(new RangingListener() {
             @Override
-            public Void call() throws Exception {
-                monitorHelper.doRanging(new RangingListener() {
-                    @Override
-                    public void onBeaconEntered(Beacon beacon) {
-                        Log.d(TAG, "onBeaconEntered " + beacon);
-                        BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.ENTER, new Date());
-                        dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
-                        LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
-                    }
-
-                    @Override
-                    public void onBeaconExited(Beacon beacon) {
-                        Log.d(TAG, "onBeaconExited " + beacon);
-                        BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.EXIT, new Date());
-                        dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
-                        LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
-                    }
-
-                    @Override
-                    public void onFinished() {
-                        Log.d(TAG, "Ranging Finished");
-                        monitorHelper.scheduleNextRanging();
-                    }
-                });
-                return null;
-            }
-        });
-    }
-
-    private void execActionWithRequiredHelpers(Helper[] helpers, final Callable<Void> func) {
-        helperAcquirer.acquireHelpers(new ArrayList<Helper>(Arrays.asList(helpers)), new HelperAcquirerListener() {
-            @Override
-            public void onReady() {
-                try {
-                    func.call();
-                } catch (Exception ex) {
-                    Log.e(TAG, "Failed to call func: " + ex);
-                }
+            public void onBeaconEntered(Beacon beacon) {
+                Log.d(TAG, "onBeaconEntered " + beacon);
+                BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.ENTER, new Date());
+                dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
+                LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
             }
 
             @Override
-            public void onError() {
+            public void onBeaconExited(Beacon beacon) {
+                Log.d(TAG, "onBeaconExited " + beacon);
+                BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.EXIT, new Date());
+                dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
+                LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
+            }
 
+            @Override
+            public void onFinished() {
+                Log.d(TAG, "Ranging Finished");
+                monitorHelper.scheduleNextRanging();
             }
         });
     }

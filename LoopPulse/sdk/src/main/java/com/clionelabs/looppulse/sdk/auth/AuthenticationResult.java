@@ -1,12 +1,21 @@
-package com.clionelabs.looppulse.sdk.account;
+package com.clionelabs.looppulse.sdk.auth;
+
+import android.util.Log;
+
+import com.clionelabs.looppulse.sdk.monitor.GeofenceLocation;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Created by hiukim on 2014-10-04.
  */
 public class AuthenticationResult {
+    private static String TAG = AuthenticationResult.class.getCanonicalName();
+
     public boolean isAuthenticated;
 
     public String parseApplicationId;
@@ -19,6 +28,8 @@ public class AuthenticationResult {
     public String firebaseEngagementEventsURL;
     public String firebaseVisitorEventsURL;
 
+    public ArrayList<GeofenceLocation> geofenceLocations;
+
     public AuthenticationResult(String responseString) {
         try {
             JSONObject jsonObject = new JSONObject(responseString);
@@ -28,6 +39,19 @@ public class AuthenticationResult {
                 JSONObject systemObject = jsonObject.getJSONObject("system");
                 JSONObject parseObject = systemObject.getJSONObject("parse");
                 JSONObject firebaseObject = systemObject.getJSONObject("firebase");
+                JSONObject geofencesObject = systemObject.getJSONObject("geofences");
+
+                geofenceLocations = new ArrayList<GeofenceLocation>();
+                Iterator<String> keys = geofencesObject.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    JSONObject locationObject = geofencesObject.getJSONObject(key);
+                    double latitude = locationObject.getDouble("latitude");
+                    double longitude = locationObject.getDouble("longitude");
+                    float radius = (float) locationObject.getDouble("radius");
+                    geofenceLocations.add(new GeofenceLocation(key, latitude, longitude, radius));
+                    Log.d(TAG, "coordinate: " + latitude + ", " + longitude + ", " + radius);
+                }
 
                 parseApplicationId = parseObject.getString("applicationId");
                 parseClientKey = parseObject.getString("clientKey");
