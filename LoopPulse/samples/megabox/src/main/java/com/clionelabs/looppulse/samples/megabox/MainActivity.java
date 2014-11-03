@@ -12,6 +12,7 @@ import com.clionelabs.looppulse.sdk.LoopPulse;
 import com.clionelabs.looppulse.sdk.LoopPulseListener;
 import com.clionelabs.looppulse.sdk.datastore.BeaconEvent;
 
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -29,7 +30,6 @@ public class MainActivity extends ActionBarActivity implements LoopPulseListener
         loopPulse = new LoopPulse(this, this);
         loopPulse.authenticate(APPLICATION_ID, APPLICATION_TOKEN);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -50,28 +50,34 @@ public class MainActivity extends ActionBarActivity implements LoopPulseListener
         return super.onOptionsItemSelected(item);
     }
 
-
     private void testIdentifyUser() {
         loopPulse.identifyUser("external ABC");
     }
 
+    private void testTagVisitor() {
+        HashMap<String, String> properties = new HashMap<String, String>();
+        properties.put("key1", "value1");
+        properties.put("key2", "value2");
+        loopPulse.tagVisitor(properties);
+    }
+
     private void testMonitoring() {
-        loopPulse.startMonitoring();
+        loopPulse.startLocationMonitoring();
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                loopPulse.stopMonitoring();
+                loopPulse.stopLocationMonitoring();
             }
         }, 30 * 1000);
     }
-
 
     @Override
     public void onAuthenticated() {
         Log.d(TAG, "onAuthenticated()");
         addEventLabel("onAuthenticated");
         testIdentifyUser();
+        testTagVisitor();
         testMonitoring();
     }
 
@@ -96,7 +102,7 @@ public class MainActivity extends ActionBarActivity implements LoopPulseListener
     @Override
     public void onBeaconDetected(BeaconEvent event) {
         Log.d(TAG, "onBeaconDetected: " + event);
-        addEventLabel(event.toFirebaseObject("uuid").toString());
+        addEventLabel(event.toFirebaseObject().toString());
     }
 
     private void addEventLabel(String msg) {

@@ -9,6 +9,7 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.LocationClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by hiukim on 2014-10-16.
@@ -34,10 +35,17 @@ public class LoopPulseServiceExecutor {
         context.startService(intent);
     }
 
-    public static void startActionIdentifyUser(Context context, String externalID) {
+    public static void startActionIdentifyVisitor(Context context, String externalID) {
         Intent intent = new Intent(context, LoopPulseService.class);
-        intent.setAction(LoopPulseService.ActionType.IDENTIFY_USER.toString());
-        intent.putExtra(LoopPulseService.EXTRA_IDENTIFY_USER_EXTERNAL_ID, externalID);
+        intent.setAction(LoopPulseService.ActionType.IDENTIFY_VISITOR.toString());
+        intent.putExtra(LoopPulseService.EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID, externalID);
+        context.startService(intent);
+    }
+
+    public static void startActionTagVisitor(Context context, HashMap<String, String> properties) {
+        Intent intent = new Intent(context, LoopPulseService.class);
+        intent.setAction(LoopPulseService.ActionType.TAG_VISITOR.toString());
+        intent.putExtra(LoopPulseService.EXTRA_TAG_VISITOR_PROPERTIES, properties);
         context.startService(intent);
     }
 

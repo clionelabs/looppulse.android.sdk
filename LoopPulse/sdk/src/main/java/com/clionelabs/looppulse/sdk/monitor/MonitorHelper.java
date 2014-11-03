@@ -16,6 +16,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 
 /**
  * Created by hiukim on 2014-10-16.
@@ -28,7 +29,7 @@ public class MonitorHelper {
 
     private Context context;
     private BeaconManager beaconManager;
-    private Region defaultRegion;
+    private Region allRegion;
     private final Object isRangingLock = new Object();
     private boolean isRanging;
     private RangingStatus rangingStatus;
@@ -36,13 +37,15 @@ public class MonitorHelper {
     private boolean isMonitoring = false;
     private boolean isReady;
     private ArrayList<GeofenceLocation> geofenceLocations;
+    private ArrayList<Region> monitorRegions;
 
     public MonitorHelper(Context context) {
         this.context = context;
-        this.defaultRegion = new Region("LoopPulse-Generic", null, null, null); // TODO
+        this.allRegion = new Region("LoopPulse-Generic", null, null, null);
         this.beaconManager = new BeaconManager(context);
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         this.geofenceLocations = new ArrayList<GeofenceLocation>();
+        this.monitorRegions = new ArrayList<Region>();
         this.isReady = false;
     }
 
@@ -50,6 +53,11 @@ public class MonitorHelper {
         for (GeofenceLocation geofenceLocation: authenticationResult.geofenceLocations) {
             this.geofenceLocations.add(geofenceLocation);
         }
+
+        for (Region region: authenticationResult.beaconRegions) {
+            this.monitorRegions.add(region);
+        }
+
         beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
             public void onServiceReady() {
@@ -57,6 +65,27 @@ public class MonitorHelper {
                 listener.onReady();
             }
         });
+    }
+
+    /**
+     * Filter out the beacons which are not currently under monitor.
+     */
+    public void filterMonitorBeacons(ArrayList<Beacon> beacons) {
+        Iterator<Beacon> iter = beacons.iterator();
+        while (iter.hasNext()) {
+            Beacon beacon = iter.next();
+            boolean existed = false;
+            for (Region region: monitorRegions) {
+                // Need to check major, minor?
+                if (region.getProximityUUID().equals(beacon.getProximityUUID())) {
+                    existed = true;
+                    break;
+                }
+            }
+            if (!existed) {
+                iter.remove();
+            }
+        }
     }
 
     /**
@@ -81,6 +110,7 @@ public class MonitorHelper {
                 String type = msg.getData().getString(RangingRunnable.MSG_TYPE);
                 if (type.equals(RangingRunnable.MSG_RANGE)) {
                     ArrayList<Beacon> beacons = msg.getData().getParcelableArrayList(RangingRunnable.BEACONS_LIST);
+                    filterMonitorBeacons(beacons);
                     rangingStatus.receiveRangingBeacons(beacons);
                 } else if (type.equals(RangingRunnable.MSG_FINISH)) {
                     for (Beacon beacon: rangingStatus.getEnteredBeacons()) {
@@ -96,7 +126,9 @@ public class MonitorHelper {
                 }
             }
         };
-        new Thread(new RangingRunnable(beaconManager, defaultRegion, RANGE_PERIOD_SEC, handler)).start();
+
+        // We will monitor all regions, and then filter-out the LoopPulse ones later.
+        new Thread(new RangingRunnable(beaconManager, allRegion, RANGE_PERIOD_SEC, handler)).start();
     }
 
     public void startRanging() {

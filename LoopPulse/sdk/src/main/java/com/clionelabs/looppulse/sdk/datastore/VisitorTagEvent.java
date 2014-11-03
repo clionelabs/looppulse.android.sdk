@@ -4,17 +4,17 @@ import java.util.Date;
 import java.util.HashMap;
 
 /**
- * Created by hiukim on 2014-10-07.
+ * Created by hiukim on 2014-11-04.
  */
-public class VisitorIdentifyEvent implements FirebaseEvent {
-    private static String typeName = "Identify";
+public class VisitorTagEvent  implements FirebaseEvent {
+    private static String typeName = "tag";
     private String visitorUUID;
-    private String externalID;
+    private HashMap<String, String> properties;
     private Date createdAt;
 
-    public VisitorIdentifyEvent(String visitorUUID, String externalID, Date createdAt) {
+    public VisitorTagEvent(String visitorUUID, HashMap<String, String> properties, Date createdAt) {
         this.visitorUUID = visitorUUID;
-        this.externalID = externalID;
+        this.properties = properties;
         this.createdAt = createdAt;
     }
 
@@ -24,7 +24,7 @@ public class VisitorIdentifyEvent implements FirebaseEvent {
         eventInfo.put("type", typeName);
         eventInfo.put("created_at", createdAt.toString());
         eventInfo.put("visitorUUID", visitorUUID);
-        eventInfo.put("externalID", externalID);
+        eventInfo.put("properties", properties);
         return eventInfo;
     }
 }

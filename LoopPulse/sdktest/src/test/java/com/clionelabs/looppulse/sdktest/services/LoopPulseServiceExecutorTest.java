@@ -12,6 +12,8 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.HashMap;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -54,10 +56,24 @@ public class LoopPulseServiceExecutorTest {
 
     @Test
     public void testStartActionIdentifyUser() {
-        LoopPulseServiceExecutor.startActionIdentifyUser(Robolectric.application, "ExternalID");
+        LoopPulseServiceExecutor.startActionIdentifyVisitor(Robolectric.application, "ExternalID");
         Intent serviceIntent = Robolectric.getShadowApplication().peekNextStartedService();
         assertEquals(LoopPulseService.class.getCanonicalName(), serviceIntent.getComponent().getClassName());
-        assertEquals(LoopPulseService.ActionType.IDENTIFY_USER.toString(), serviceIntent.getAction());
-        assertEquals("ExternalID", serviceIntent.getStringExtra(LoopPulseService.EXTRA_IDENTIFY_USER_EXTERNAL_ID));
+        assertEquals(LoopPulseService.ActionType.IDENTIFY_VISITOR.toString(), serviceIntent.getAction());
+        assertEquals("ExternalID", serviceIntent.getStringExtra(LoopPulseService.EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID));
+    }
+
+    @Test
+    public void testStartActionTagUser() {
+        HashMap<String, String> properties = new HashMap<String, String>();
+        properties.put("key1", "value1");
+        properties.put("key2", "value2");
+        LoopPulseServiceExecutor.startActionTagVisitor(Robolectric.application, properties);
+        Intent serviceIntent = Robolectric.getShadowApplication().peekNextStartedService();
+        assertEquals(LoopPulseService.class.getCanonicalName(), serviceIntent.getComponent().getClassName());
+        assertEquals(LoopPulseService.ActionType.TAG_VISITOR.toString(), serviceIntent.getAction());
+        HashMap<String, String> properties2 = (HashMap<String, String>) serviceIntent.getSerializableExtra(LoopPulseService.EXTRA_TAG_VISITOR_PROPERTIES);
+        assertEquals("value1", properties2.get("key1"));
+        assertEquals("value2", properties2.get("key2"));
     }
 }

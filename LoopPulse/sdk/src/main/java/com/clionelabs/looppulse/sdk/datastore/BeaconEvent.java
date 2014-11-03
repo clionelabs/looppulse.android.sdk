@@ -14,6 +14,7 @@ import java.util.HashMap;
 public class BeaconEvent implements FirebaseEvent, Parcelable {
     public enum EventType {ENTER, EXIT, RANGE};
 
+    private String visitorUUID;
     private double accuracy;
     private Date createdAt;
     private int major;
@@ -24,10 +25,8 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
     private String uuid;
 
 
-    public BeaconEvent(Beacon beacon, EventType eventType, Date createdAt) {
-        /**
-         *  Don't forget to update Parcelable methods if the properties are changed!
-         */
+    public BeaconEvent(String visitorUUID, Beacon beacon, EventType eventType, Date createdAt) {
+        this.visitorUUID = visitorUUID;
         this.accuracy = 0.0; // TODO
         this.major = beacon.getMajor();
         this.minor = beacon.getMinor();
@@ -39,7 +38,7 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
     }
 
     @Override
-    public HashMap<String, Object> toFirebaseObject(String visitorUUID) {
+    public HashMap<String, Object> toFirebaseObject() {
         String typeString = "";
         switch (type) {
             case ENTER:
@@ -73,6 +72,7 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
     }
 
     public void writeToParcel(Parcel out, int flags) {
+        out.writeString(visitorUUID);
         out.writeDouble(accuracy);
         out.writeSerializable(createdAt);
         out.writeInt(major);
@@ -94,6 +94,7 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
     };
 
     private BeaconEvent(Parcel in) {
+        visitorUUID = in.readString();
         accuracy = in.readDouble();
         createdAt = (Date) in.readSerializable();
         major = in.readInt();

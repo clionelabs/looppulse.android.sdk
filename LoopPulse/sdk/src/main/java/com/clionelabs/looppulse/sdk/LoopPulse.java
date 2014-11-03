@@ -11,6 +11,8 @@ import com.clionelabs.looppulse.sdk.datastore.BeaconEvent;
 import com.clionelabs.looppulse.sdk.services.LoopPulseServiceBroadcaster;
 import com.clionelabs.looppulse.sdk.services.LoopPulseServiceExecutor;
 
+import java.util.HashMap;
+
 /**
  * Created by hiukim on 2014-10-16.
  *
@@ -69,15 +71,19 @@ public class LoopPulse {
         LoopPulseServiceExecutor.startActionAuth(context, appID, appToken);
     }
 
-    public void startMonitoring() {
+    public void startLocationMonitoring() {
         LoopPulseServiceExecutor.startActionStartMonitoring(context);
     }
 
-    public void stopMonitoring() {
+    public void stopLocationMonitoring() {
         LoopPulseServiceExecutor.startActionStopMonitoring(context);
     }
 
     public void identifyUser(String externalID) {
-        LoopPulseServiceExecutor.startActionIdentifyUser(context, externalID);
+        LoopPulseServiceExecutor.startActionIdentifyVisitor(context, externalID);
+    }
+
+    public void tagVisitor(HashMap<String, String> properties) {
+        LoopPulseServiceExecutor.startActionTagVisitor(context, properties);
     }
 }

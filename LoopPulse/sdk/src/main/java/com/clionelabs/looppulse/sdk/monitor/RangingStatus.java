@@ -74,7 +74,6 @@ public class RangingStatus {
     public void receiveRangingBeacons(List<Beacon> beacons) {
 
         for (Beacon beacon: beacons) {
-            // TODO: check whether it is a LoopPulse beacon
             String key = getBeaconKey(beacon);
             if (!currentRangedBeaconsMap.containsKey(key)) {
                 currentRangedBeaconsMap.put(key, beacon);

@@ -17,6 +17,7 @@ import com.clionelabs.looppulse.sdk.util.PreferencesManager;
 import com.estimote.sdk.Beacon;
 
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * The main component of LoopPulse SDK, which exists as a background service.
@@ -34,8 +35,9 @@ public class LoopPulseService extends Service {
     public static final String RANGE_ACTION_INTENT = "com.clionelabs.looppulse.sdk.services.action.RANGE";
     public static final String EXTRA_AUTH_APP_ID = "com.clionelabs.looppulse.sdk.services.EXTRA_AUTH_APP_ID";
     public static final String EXTRA_AUTH_APP_TOKEN = "com.clionelabs.looppulse.sdk.services.EXTRA_AUTH_APP_TOKEN";
-    public static final String EXTRA_IDENTIFY_USER_EXTERNAL_ID = "com.clionelabs.looppulse.sdk.services.EXTRA_IDENTIFY_USER_EXTERNAL_ID";
-    public enum ActionType {AUTH, START_MONITORING, STOP_MONITORING, DO_RANGE, IDENTIFY_USER, ENTER_GEOFENCE, EXIT_GEOFENCE};
+    public static final String EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID = "com.clionelabs.looppulse.sdk.services.EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID";
+    public static final String EXTRA_TAG_VISITOR_PROPERTIES = "com.clionelabs.looppulse.sdk.services.EXTRA_TAG_VISITOR_PROPERTIES";
+    public enum ActionType {AUTH, START_MONITORING, STOP_MONITORING, DO_RANGE, IDENTIFY_VISITOR, TAG_VISITOR, ENTER_GEOFENCE, EXIT_GEOFENCE};
 
     private String visitorUUID;
     private PreferencesManager preferencesManager;
@@ -101,8 +103,10 @@ public class LoopPulseService extends Service {
         } else if (action.equals(ActionType.DO_RANGE.toString())) {
             execActionDoRanging(intent);
             LoopPulseReceiver.completeWakefulIntent(intent);
-        } else if (action.equals(ActionType.IDENTIFY_USER.toString())) {
+        } else if (action.equals(ActionType.IDENTIFY_VISITOR.toString())) {
             execIdentifyUser(intent);
+        } else if (action.equals(ActionType.TAG_VISITOR.toString())) {
+            execTagVisitor(intent);
         } else if (action.equals(ActionType.ENTER_GEOFENCE.toString())) {
             execActionEnterGeofence(intent);
         } else if (action.equals(ActionType.EXIT_GEOFENCE.toString())) {
@@ -118,7 +122,7 @@ public class LoopPulseService extends Service {
         visitor = new Visitor(context);
         visitorUUID = new DeviceUuidFactory(context).getDeviceUuid().toString();
         preferencesManager = PreferencesManager.getInstance(this);
-        dataStoreHelper = new DataStoreHelper(this, preferencesManager, visitor);
+        dataStoreHelper = new DataStoreHelper(this, preferencesManager);
         monitorHelper = new MonitorHelper(this);
         authenticationManager = new AuthenticationManager(this, dataStoreHelper, monitorHelper, preferencesManager, visitor);
         isInitialized = true;
@@ -144,9 +148,15 @@ public class LoopPulseService extends Service {
         });
     }
 
-    private void execIdentifyUser(final Intent intent) {
-        String externalID = intent.getStringExtra(EXTRA_IDENTIFY_USER_EXTERNAL_ID);
-        dataStoreHelper.identifyUserWithExternalID(externalID);
+    private void execTagVisitor(Intent intent) {
+        HashMap<String, String> properties = (HashMap<String, String>) intent.getSerializableExtra(EXTRA_TAG_VISITOR_PROPERTIES);
+        dataStoreHelper.tagVisitor(visitor.getUUID(), properties);
+    }
+
+    private void execIdentifyUser(Intent intent) {
+        String externalID = intent.getStringExtra(EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID);
+        visitor.setExternalID(externalID);
+        dataStoreHelper.identifyVisitor(visitor.getUUID(), externalID);
     }
 
     private void execActionStartMonitoring(Intent intent) {
@@ -172,7 +182,7 @@ public class LoopPulseService extends Service {
             @Override
             public void onBeaconEntered(Beacon beacon) {
                 Log.d(TAG, "onBeaconEntered " + beacon);
-                BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.ENTER, new Date());
+                BeaconEvent beaconEvent = new BeaconEvent(visitor.getUUID(), beacon, BeaconEvent.EventType.ENTER, new Date());
                 dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
                 LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
             }
@@ -180,7 +190,7 @@ public class LoopPulseService extends Service {
             @Override
             public void onBeaconExited(Beacon beacon) {
                 Log.d(TAG, "onBeaconExited " + beacon);
-                BeaconEvent beaconEvent = new BeaconEvent(beacon, BeaconEvent.EventType.EXIT, new Date());
+                BeaconEvent beaconEvent = new BeaconEvent(visitor.getUUID(), beacon, BeaconEvent.EventType.EXIT, new Date());
                 dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
                 LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
             }
