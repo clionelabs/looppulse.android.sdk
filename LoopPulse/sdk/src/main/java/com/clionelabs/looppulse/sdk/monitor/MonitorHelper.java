@@ -146,7 +146,7 @@ public class MonitorHelper {
             GeofenceRemover geofenceRemover = new GeofenceRemover(context);
             ArrayList<String> requestIds = new ArrayList<String>();
             for (GeofenceLocation geofenceLocation: geofenceLocations) {
-                requestIds.add(geofenceLocation.getRequiestId());
+                requestIds.add(geofenceLocation.getRequestId());
             }
             geofenceRemover.removeGeofencesById(requestIds);
         }

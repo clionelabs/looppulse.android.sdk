@@ -17,8 +17,8 @@ import java.util.TimerTask;
 
 public class MainActivity extends ActionBarActivity implements LoopPulseListener {
     private static final String TAG = "MegaBoxApplication";
-    private static String APPLICATION_ID = "28AuRvYh3vSA3Cueq";
-    private static String APPLICATION_TOKEN = "5kmjyYLKvy2xqbuZNwqe";
+    private static String APPLICATION_ID = "5of345ljkfaLKJKJL";
+    private static String APPLICATION_TOKEN = "34LKJ043nkjajoifuer9";
     private LoopPulse loopPulse;
 
     @Override

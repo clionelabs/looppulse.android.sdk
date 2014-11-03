@@ -39,16 +39,16 @@ public class AuthenticationResult {
                 JSONObject systemObject = jsonObject.getJSONObject("system");
                 JSONObject parseObject = systemObject.getJSONObject("parse");
                 JSONObject firebaseObject = systemObject.getJSONObject("firebase");
-                JSONObject geofencesObject = systemObject.getJSONObject("geofences");
+                JSONObject locationsObject = systemObject.getJSONObject("locations");
 
                 geofenceLocations = new ArrayList<GeofenceLocation>();
-                Iterator<String> keys = geofencesObject.keys();
+                Iterator<String> keys = locationsObject.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
-                    JSONObject locationObject = geofencesObject.getJSONObject(key);
-                    double latitude = locationObject.getDouble("latitude");
-                    double longitude = locationObject.getDouble("longitude");
-                    float radius = (float) locationObject.getDouble("radius");
+                    JSONObject coordinateObject = locationsObject.getJSONObject(key).getJSONObject("coordinate");
+                    double latitude = coordinateObject.getDouble("latitude");
+                    double longitude = coordinateObject.getDouble("longitude");
+                    float radius = (float) coordinateObject.getDouble("radius");
                     geofenceLocations.add(new GeofenceLocation(key, latitude, longitude, radius));
                     Log.d(TAG, "coordinate: " + latitude + ", " + longitude + ", " + radius);
                 }
