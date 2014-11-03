@@ -37,12 +37,6 @@ public class MonitorHelper {
     private boolean isReady;
     private ArrayList<GeofenceLocation> geofenceLocations;
 
-    // TODO: The following values should read from server configuration. here might be multiple geofence regions as well.
-//    private final String GEOFENCE_requestId = "1";
-//    private final double GEOFENCE_latitude = 22.286763;
-//    private final double GEOFENCE_longitude = 114.190319;
-//    private final float GEOFENCE_radius = 50.0f;
-
     public MonitorHelper(Context context) {
         this.context = context;
         this.defaultRegion = new Region("LoopPulse-Generic", null, null, null); // TODO
