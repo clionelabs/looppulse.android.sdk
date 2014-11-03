@@ -38,8 +38,8 @@ import java.io.IOException;
 
 public class AuthenticationManager {
     private static String TAG = AuthenticationManager.class.getCanonicalName();
-//    private static final String AUTH_URL = "http://localhost:8010/api/authenticate/applications/";
-    private static final String AUTH_URL = "http://192.168.0.102:3000/api/authenticate/applications/";
+    private static final String AUTH_URL = "http://localhost:8010/api/authenticate/applications/";
+//    private static final String AUTH_URL = "http://192.168.0.102:3000/api/authenticate/applications/";
 
     private Context context;
     private AuthenticationListener authenticationListener;

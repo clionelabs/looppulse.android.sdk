@@ -38,7 +38,12 @@ public class GeofenceRequester implements OnAddGeofencesResultListener, Connecti
     public void addGeofences(ArrayList<GeofenceLocation> locations) {
         mCurrentGeofences = new ArrayList<Geofence>();
         for (GeofenceLocation location: locations) {
-            mCurrentGeofences.add(location.makeGeofence());
+            try {
+                Geofence g = location.makeGeofence();
+                mCurrentGeofences.add(g);
+            } catch (Exception ex) {
+                Log.e(TAG, "Error adding geofence: " + ex);
+            }
         }
 
         // connect location service first, and then add Geofence in the connected callback
