@@ -1,4 +1,4 @@
-package com.clionelabs.looppulse.sdk.account;
+package com.clionelabs.looppulse.sdk.auth;
 
 /**
  * Created by hiukim on 2014-10-16.

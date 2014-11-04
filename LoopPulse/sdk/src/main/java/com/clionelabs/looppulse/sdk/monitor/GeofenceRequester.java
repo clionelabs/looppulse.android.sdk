@@ -19,6 +19,7 @@ import com.google.android.gms.location.LocationClient.OnAddGeofencesResultListen
 import com.google.android.gms.location.LocationStatusCodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class GeofenceRequester implements OnAddGeofencesResultListener, ConnectionCallbacks, OnConnectionFailedListener {
     private static String TAG = GeofenceRequester.class.getCanonicalName();
@@ -37,7 +38,12 @@ public class GeofenceRequester implements OnAddGeofencesResultListener, Connecti
     public void addGeofences(ArrayList<GeofenceLocation> locations) {
         mCurrentGeofences = new ArrayList<Geofence>();
         for (GeofenceLocation location: locations) {
-            mCurrentGeofences.add(location.makeGeofence());
+            try {
+                Geofence g = location.makeGeofence();
+                mCurrentGeofences.add(g);
+            } catch (Exception ex) {
+                Log.e(TAG, "Error adding geofence: " + ex);
+            }
         }
 
         // connect location service first, and then add Geofence in the connected callback
@@ -92,9 +98,9 @@ public class GeofenceRequester implements OnAddGeofencesResultListener, Connecti
     @Override
     public void onAddGeofencesResult(int statusCode, String[] geofenceRequestIds) {
         if (LocationStatusCodes.SUCCESS == statusCode) {
-            Log.d(TAG, "geoFenceAdded successful");
+            Log.d(TAG, "geoFenceAdded successful: " + Arrays.toString(geofenceRequestIds));
         } else {
-            Log.d(TAG, "geoFenceAdded failed");
+            Log.d(TAG, "geoFenceAdded failed: " + Arrays.toString(geofenceRequestIds));
         }
         // Disconnect the location client
         requestDisconnection();

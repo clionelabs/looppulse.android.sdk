@@ -2,10 +2,12 @@
  * Copyright (c) 2014 Clione Labs. All rights reserved.
  */
 
-package com.clionelabs.looppulse.sdk.account;
+package com.clionelabs.looppulse.sdk.services;
 
 import android.content.Context;
 import android.os.Build;
+
+import com.clionelabs.looppulse.sdk.util.DeviceUuidFactory;
 
 /**
  * Created by simon on 6/6/14.

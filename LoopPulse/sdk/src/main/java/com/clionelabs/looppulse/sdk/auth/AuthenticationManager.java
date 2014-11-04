@@ -1,11 +1,15 @@
-package com.clionelabs.looppulse.sdk.account;
+package com.clionelabs.looppulse.sdk.auth;
 
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.clionelabs.looppulse.sdk.datastore.DataStoreHelperSetupListener;
+import com.clionelabs.looppulse.sdk.monitor.MonitorHelper;
+import com.clionelabs.looppulse.sdk.monitor.MonitorHelperSetupListener;
+import com.clionelabs.looppulse.sdk.services.Visitor;
+import com.clionelabs.looppulse.sdk.datastore.DataStoreHelper;
 import com.clionelabs.looppulse.sdk.util.PreferencesManager;
-import com.clionelabs.looppulse.sdk.datastore.VisitorIdentifyEvent;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -20,35 +24,69 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Date;
 
 /**
  * Created by hiukim on 2014-10-16.
+ *
+ * This class abstract the multiple asynchronous calls on application authentication by providing a single onAuthenticated event back to the listener.
+ * The asynchronous calls include the following:
+ *      1) authenticate LoopPulse application
+ *      2) authenticate firebase
+ *      3) connecting beacon manager
+ *          Note: 2) and 3) can only be started after 1) is successfully returned.
  */
-public class AccountHelper {
-    private static String TAG = AccountHelper.class.getCanonicalName();
+
+public class AuthenticationManager {
+    private static String TAG = AuthenticationManager.class.getCanonicalName();
     private static final String AUTH_URL = "http://localhost:8010/api/authenticate/applications/";
+//    private static final String AUTH_URL = "http://192.168.0.102:3000/api/authenticate/applications/";
 
     private Context context;
     private AuthenticationListener authenticationListener;
     private PreferencesManager preferencesManager;
+    private DataStoreHelper dataStoreHelper;
+    private MonitorHelper monitorHelper;
     private Visitor visitor;
+    private boolean isAutenticated;
 
-    public AccountHelper(Context context, PreferencesManager preferencesManager) {
+    private enum HelperType {DATASTORE, MONITOR};
+    private int helpersReadyMask;
+
+    public AuthenticationManager(Context context, DataStoreHelper dataStoreHelper, MonitorHelper monitorHelper, PreferencesManager preferencesManager, Visitor visitor) {
         this.context = context;
+        this.dataStoreHelper = dataStoreHelper;
+        this.monitorHelper = monitorHelper;
         this.preferencesManager = preferencesManager;
-        this.visitor = new Visitor(context);
+        this.visitor = visitor;
+        this.isAutenticated = false;
+        this.helpersReadyMask = 0;
     }
 
-    public void auth(String appID, String appToken, AuthenticationListener listener) {
+    public void setAuthInfo(String appID, String appToken) {
+        preferencesManager.updateAuthInfo(appID, appToken);
+    }
+
+    public void auth(AuthenticationListener listener) {
         authenticationListener = listener;
+        String appID = preferencesManager.getAppId();
+        String appToken = preferencesManager.getAppToken();
         (new AuthTask()).execute(appID, appToken);
     }
 
-    public VisitorIdentifyEvent identifyUser(String externalID) {
-        visitor.setExternalID(externalID);
-        VisitorIdentifyEvent event = new VisitorIdentifyEvent(externalID, new Date());
-        return event;
+    public boolean isAutenticated() {
+        return isAutenticated;
+    }
+
+    public boolean isAuthInfoReady() {
+        return preferencesManager.getAppId() != null;
+    }
+
+    public void setHelperReady(HelperType type) {
+        helpersReadyMask |= (1 << type.ordinal());
+    }
+
+    public boolean isAllHelpersReady() {
+        return helpersReadyMask == (1 << HelperType.values().length) - 1;
     }
 
     private class AuthTask extends AsyncTask<String, Void, String> {
@@ -106,7 +144,7 @@ public class AccountHelper {
         protected void onPostExecute(String responseString) {
             if (responseString == null) {
                 if (authenticationListener != null) {
-                    authenticationListener.onAuthenticationError("Failed to authenticate");
+                    authenticationListener.onAuthenticationError("Error connecting to application server.");
                 }
                 return;
             }
@@ -114,10 +152,51 @@ public class AccountHelper {
             AuthenticationResult result = new AuthenticationResult(responseString);
             if (!result.isAuthenticated) {
                 if (authenticationListener != null) {
-                    authenticationListener.onAuthenticationError("Invalid clientID/Token");
+                    authenticationListener.onAuthenticationError("Failed to authenticate application.");
                 }
                 return;
             }
+
+            // TODO: Can also create a listener for monitor setup. Now we assume the asynchronous setup works.
+            monitorHelper.setup(result, new MonitorHelperSetupListener() {
+                @Override
+                public void onReady() {
+                    if (authenticationListener != null) {
+                        setHelperReady(HelperType.MONITOR);
+                        if (isAllHelpersReady()) {
+                            isAutenticated = true;
+                            authenticationListener.onAuthenticated();
+                        }
+                    }
+                }
+
+                @Override
+                public void onError() {
+                    if (authenticationListener != null) {
+                        authenticationListener.onAuthenticationError("Failed setting up Beacon Monitor.");
+                    }
+                }
+            });
+
+            dataStoreHelper.setup(result, new DataStoreHelperSetupListener() {
+                @Override
+                public void onReady() {
+                    if (authenticationListener != null) {
+                        setHelperReady(HelperType.DATASTORE);
+                        if (isAllHelpersReady()) {
+                            isAutenticated = true;
+                            authenticationListener.onAuthenticated();
+                        }
+                    }
+                }
+
+                @Override
+                public void onError() {
+                    if (authenticationListener != null) {
+                        authenticationListener.onAuthenticationError("Failed to connect to FireBase.");
+                    }
+                }
+            });
 
             Log.d(TAG, "isAuthenticated: " + result.isAuthenticated);
             Log.d(TAG, "parseApplicationId: " + result.parseApplicationId);
@@ -128,11 +207,6 @@ public class AccountHelper {
             Log.d(TAG, "firebaseBeaconEventsURL: " + result.firebaseBeaconEventsURL);
             Log.d(TAG, "firebaseEngagementEventsURL: " + result.firebaseEngagementEventsURL);
             Log.d(TAG, "firebaseVisitorEventsURL: " + result.firebaseVisitorEventsURL);
-            preferencesManager.updateWithAuthResult(result);
-
-            if (authenticationListener != null) {
-                authenticationListener.onAuthenticated();
-            }
         }
 
         @Override
