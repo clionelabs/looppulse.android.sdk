@@ -17,6 +17,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by hiukim on 2014-10-16.
@@ -70,7 +71,7 @@ public class MonitorHelper {
     /**
      * Filter out the beacons which are not currently under monitor.
      */
-    public void filterMonitorBeacons(ArrayList<Beacon> beacons) {
+    public void filterMonitorBeacons(List<Beacon> beacons) {
         Iterator<Beacon> iter = beacons.iterator();
         while (iter.hasNext()) {
             Beacon beacon = iter.next();

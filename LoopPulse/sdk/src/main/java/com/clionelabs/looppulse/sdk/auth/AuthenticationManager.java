@@ -197,16 +197,6 @@ public class AuthenticationManager {
                     }
                 }
             });
-
-            Log.d(TAG, "isAuthenticated: " + result.isAuthenticated);
-            Log.d(TAG, "parseApplicationId: " + result.parseApplicationId);
-            Log.d(TAG, "parseClientKey: " + result.parseClientKey);
-            Log.d(TAG, "parseRestKey: " + result.parseRestKey);
-            Log.d(TAG, "firebaseToken: " + result.firebaseToken);
-            Log.d(TAG, "firebaseRoot: " + result.firebaseRoot);
-            Log.d(TAG, "firebaseBeaconEventsURL: " + result.firebaseBeaconEventsURL);
-            Log.d(TAG, "firebaseEngagementEventsURL: " + result.firebaseEngagementEventsURL);
-            Log.d(TAG, "firebaseVisitorEventsURL: " + result.firebaseVisitorEventsURL);
         }
 
         @Override

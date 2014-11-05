@@ -80,6 +80,16 @@ public class AuthenticationResult {
                 firebaseBeaconEventsURL = firebaseObject.getString("beacon_events");
                 firebaseEngagementEventsURL = firebaseObject.getString("engagement_events");
                 firebaseVisitorEventsURL = firebaseObject.getString("visitor_events");
+
+                Log.d(TAG, "isAuthenticated: " + isAuthenticated);
+                Log.d(TAG, "parseApplicationId: " + parseApplicationId);
+                Log.d(TAG, "parseClientKey: " + parseClientKey);
+                Log.d(TAG, "parseRestKey: " + parseRestKey);
+                Log.d(TAG, "firebaseToken: " + firebaseToken);
+                Log.d(TAG, "firebaseRoot: " + firebaseRoot);
+                Log.d(TAG, "firebaseBeaconEventsURL: " + firebaseBeaconEventsURL);
+                Log.d(TAG, "firebaseEngagementEventsURL: " + firebaseEngagementEventsURL);
+                Log.d(TAG, "firebaseVisitorEventsURL: " + firebaseVisitorEventsURL);
             }
         } catch (JSONException e) {
             isAuthenticated = false;
