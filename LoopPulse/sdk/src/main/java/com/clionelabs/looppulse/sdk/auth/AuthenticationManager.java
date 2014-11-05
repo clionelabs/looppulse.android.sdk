@@ -93,6 +93,9 @@ public class AuthenticationManager {
         @Override
         protected String doInBackground(String... params) {
             try {
+                // get advertising id
+                visitor.acquireUUID(context);
+
                 String appID = params[0];
                 String appToken = params[1];
 

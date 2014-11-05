@@ -12,7 +12,6 @@ import com.clionelabs.looppulse.sdk.datastore.BeaconEvent;
 import com.clionelabs.looppulse.sdk.datastore.DataStoreHelper;
 import com.clionelabs.looppulse.sdk.monitor.MonitorHelper;
 import com.clionelabs.looppulse.sdk.monitor.RangingListener;
-import com.clionelabs.looppulse.sdk.util.DeviceUuidFactory;
 import com.clionelabs.looppulse.sdk.util.PreferencesManager;
 import com.estimote.sdk.Beacon;
 
@@ -39,7 +38,6 @@ public class LoopPulseService extends Service {
     public static final String EXTRA_TAG_VISITOR_PROPERTIES = "com.clionelabs.looppulse.sdk.services.EXTRA_TAG_VISITOR_PROPERTIES";
     public enum ActionType {AUTH, START_MONITORING, STOP_MONITORING, DO_RANGE, IDENTIFY_VISITOR, TAG_VISITOR, ENTER_GEOFENCE, EXIT_GEOFENCE};
 
-    private String visitorUUID;
     private PreferencesManager preferencesManager;
     private AuthenticationManager authenticationManager;
     private DataStoreHelper dataStoreHelper;
@@ -120,7 +118,6 @@ public class LoopPulseService extends Service {
         if (isInitialized) return;
         context = this;
         visitor = new Visitor(context);
-        visitorUUID = new DeviceUuidFactory(context).getDeviceUuid().toString();
         preferencesManager = PreferencesManager.getInstance(this);
         dataStoreHelper = new DataStoreHelper(this, preferencesManager);
         monitorHelper = new MonitorHelper(this);
@@ -155,7 +152,6 @@ public class LoopPulseService extends Service {
 
     private void execIdentifyUser(Intent intent) {
         String externalID = intent.getStringExtra(EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID);
-        visitor.setExternalID(externalID);
         dataStoreHelper.identifyVisitor(visitor.getUUID(), externalID);
     }
 
