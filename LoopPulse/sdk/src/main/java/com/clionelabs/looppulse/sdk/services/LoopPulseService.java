@@ -157,7 +157,7 @@ public class LoopPulseService extends Service {
 
     private void execActionStartMonitoring(Intent intent) {
         if (!visitor.isEnableTracking()) {
-            Log.d(TAG, "Monitoring doesn't start; Visitor opted out advertising tracking.");
+            Log.d(TAG, "Monitoring doesn't start. Visitor opted out advertising tracking.");
             return;
         }
         monitorHelper.startRanging();
