@@ -25,6 +25,7 @@ public class VisitorIdentifyEventTest {
     Field externalIDField;
     Field createdAtField;
 
+    String visitorUUID = "DUMMY_VISITOR";
     String externalId = "DUMMY_EXTERNAL_ID";
     Date now = new Date();
 
@@ -42,7 +43,7 @@ public class VisitorIdentifyEventTest {
 
     @Test
     public void testConstructor() {
-        VisitorIdentifyEvent event = new VisitorIdentifyEvent(externalId, now);
+        VisitorIdentifyEvent event = new VisitorIdentifyEvent(visitorUUID, externalId, now);
         helpValidateEventFields(event);
     }
 

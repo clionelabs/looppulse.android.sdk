@@ -4,13 +4,13 @@ import android.content.Context;
 import android.util.Log;
 
 import com.clionelabs.looppulse.sdk.auth.AuthenticationResult;
-import com.clionelabs.looppulse.sdk.services.Visitor;
 import com.clionelabs.looppulse.sdk.util.PreferencesManager;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * Created by hiukim on 2014-10-16.
@@ -24,13 +24,11 @@ public class DataStoreHelper {
     private Firebase beaconEventsRef;
     private Firebase visitorEventsRef;
     private Firebase engagementEventsRef;
-    private Visitor visitor;
     private boolean isReady;
 
-    public DataStoreHelper(Context context, PreferencesManager preferencesManager, Visitor visitor) {
+    public DataStoreHelper(Context context, PreferencesManager preferencesManager) {
         this.context = context;
         this.preferencesManager = preferencesManager;
-        this.visitor = visitor;
         this.isReady = false;
     }
 
@@ -58,9 +56,13 @@ public class DataStoreHelper {
         });
     }
 
-    public void identifyUserWithExternalID(String externalID) {
-        visitor.setExternalID(externalID);
-        VisitorIdentifyEvent event = new VisitorIdentifyEvent(externalID, new Date());
+    public void tagVisitor(String visitorUUID, HashMap<String, String> properties) {
+        VisitorTagEvent event = new VisitorTagEvent(visitorUUID, properties, new Date());
+        createFirebaseEvent(visitorEventsRef, event);
+    }
+
+    public void identifyVisitor(String visitorUUID, String externalID) {
+        VisitorIdentifyEvent event = new VisitorIdentifyEvent(visitorUUID, externalID, new Date());
         createFirebaseEvent(visitorEventsRef, event);
     }
 
@@ -74,13 +76,13 @@ public class DataStoreHelper {
             return;
         }
 
-        firebaseRef.push().setValue(event.toFirebaseObject(visitor.getUUID()), new Firebase.CompletionListener() {
+        firebaseRef.push().setValue(event.toFirebaseObject(), new Firebase.CompletionListener() {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                 if (firebaseError != null) {
                     Log.d(TAG, "Data could not be saved. " + firebaseError.getMessage());
                 } else {
-                    Log.d(TAG, "Data saved successfully: " + event.toFirebaseObject(visitor.getUUID()));
+                    Log.d(TAG, "Data saved successfully: " + event.toFirebaseObject());
                 }
             }
         });
