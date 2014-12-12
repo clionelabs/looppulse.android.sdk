@@ -47,6 +47,15 @@ public class MainActivity extends ActionBarActivity implements LoopPulseListener
         if (id == R.id.action_settings) {
             return true;
         }
+
+        if (id == R.id.action_start_monitoring) {
+            loopPulse.startLocationMonitoring();
+        }
+
+        if (id == R.id.action_stop_monitoring) {
+            loopPulse.stopLocationMonitoring();
+        }
+
         return super.onOptionsItemSelected(item);
     }
 

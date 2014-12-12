@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LoopPulse.iml" filepath="$PROJECT_DIR$/LoopPulse.iml" />
       <module fileurl="file://$PROJECT_DIR$/samples/megabox/megabox.iml" filepath="$PROJECT_DIR$/samples/megabox/megabox.iml" />
+      <module fileurl="file://$PROJECT_DIR$/samples/monitoringexample/monitoringexample.iml" filepath="$PROJECT_DIR$/samples/monitoringexample/monitoringexample.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdk/sdk.iml" filepath="$PROJECT_DIR$/sdk/sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdktest/sdktest.iml" filepath="$PROJECT_DIR$/sdktest/sdktest.iml" />
     </modules>
