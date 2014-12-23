@@ -48,6 +48,9 @@ public class LoopPulse {
             public void onReceive(Context context, Intent intent) {
                 String eventType = intent.getStringExtra(LoopPulseServiceBroadcaster.EXTRA_BROADCAST_EVENT);
                 Log.d(TAG, "receiving LoopPulseService broadcast message: " + eventType);
+
+                if (loopPulseListener == null) return;
+
                 if (eventType.equals(LoopPulseServiceBroadcaster.AUTHENTICATED)) {
                     loopPulseListener.onAuthenticated();
                 } else if (eventType.equals(LoopPulseServiceBroadcaster.AUTHENTICATION_ERROR)) {
@@ -65,6 +68,10 @@ public class LoopPulse {
         };
         LocalBroadcastManager.getInstance(context).registerReceiver(
                 loopPulseServiceEventsReceiver, new IntentFilter(LoopPulseServiceBroadcaster.INTENT_NAME));
+    }
+
+    public void setLoopPulseListener(LoopPulseListener listener) {
+        this.loopPulseListener = listener;
     }
 
     public void authenticate(String appID, String appToken) {
