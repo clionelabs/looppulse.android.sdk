@@ -2,7 +2,7 @@
 
 ###Install SDK
   1. Download LoopPulse SDK `looppulse-android-sdk-{VERSION}.aar`
-    - **Our SDK requires a minimum android SDK version 15**
+    - **Our SDK requires a minimum android SDK version 18**
 
   2. Import the SDK into your project. e.g. If you are using Android Studio, do the following:
     - paste the `looppulse-android-sdk-{VERSION}.aar` inside the /libs folder
