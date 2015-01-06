@@ -52,6 +52,17 @@ public class AuthenticationResult {
                     Log.d(TAG, "adding beacon: " + uuid + ", " + major + ", " + minor);
                 }
 
+                JSONArray geofencesArray = systemObject.getJSONArray("geofences");
+                for (int i = 0; i < geofencesArray.length(); i++) {
+                    JSONObject geofenceObject = geofencesArray.getJSONObject(i);
+                    String key = geofenceObject.getString("_id");
+                    double lat = geofenceObject.getDouble("lat");
+                    double lng = geofenceObject.getDouble("lng");
+                    float radius = (float) geofenceObject.getDouble("radius");
+                    Log.d(TAG, "adding geoFence: " + key + ", " + lat + ", " + lng + ", " + radius);
+                    geofenceLocations.add(new GeofenceLocation(key, lat, lng, radius));
+                }
+
                 firebaseToken = firebaseObject.getString("token");
                 firebaseRoot = firebaseObject.getString("root");
                 JSONObject firebasePathsObject = firebaseObject.getJSONObject("paths");
