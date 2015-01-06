@@ -60,13 +60,9 @@ public class PreferencesManager {
     public void updateWithAuthResult(AuthenticationResult result) {
         SharedPreferences settings = mContext.getSharedPreferences(PREF_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
-        editor.putString(PARSE_APPLICATION_ID, result.parseApplicationId);
-        editor.putString(PARSE_CLIENT_KEY, result.parseClientKey);
-        editor.putString(PARSE_REST_KEY, result.parseRestKey);
         editor.putString(FIREBASE_TOKEN, result.firebaseToken);
         editor.putString(FIREBASE_ROOT_URL, result.firebaseRoot);
         editor.putString(FIREBASE_BEACON_EVENTS_URL, result.firebaseBeaconEventsURL);
-        editor.putString(FIREBASE_ENGAGEMENT_EVENTS_URL, result.firebaseEngagementEventsURL);
         editor.putString(FIREBASE_VISITOR_EVENTS_URL, result.firebaseVisitorEventsURL);
         editor.commit();
     }
