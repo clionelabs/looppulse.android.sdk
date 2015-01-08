@@ -19,6 +19,7 @@ public class AuthenticationResult {
 
     public boolean isAuthenticated;
 
+    public String sessionId;
     public String firebaseToken;
     public String firebaseRoot;
     public String firebaseBeaconEventsURL;
@@ -35,8 +36,8 @@ public class AuthenticationResult {
         try {
             JSONObject jsonObject = new JSONObject(responseString);
             isAuthenticated = jsonObject.getBoolean("authenticated");
-
             if (isAuthenticated) {
+                sessionId = jsonObject.getString("session");
                 JSONObject systemObject = jsonObject.getJSONObject("system");
                 JSONObject firebaseObject = systemObject.getJSONObject("firebase");
                 JSONArray poisArray = systemObject.getJSONArray("pois");

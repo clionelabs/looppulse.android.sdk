@@ -21,6 +21,7 @@ public class Visitor {
     private String model;
     private String systemVersion;
     private boolean enableTracking;
+    private String sessionId;
 
     public Visitor(Context context) {
         this.model = Build.MODEL;
@@ -59,5 +60,13 @@ public class Visitor {
 
     public boolean isEnableTracking() {
         return enableTracking;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    public String getSessionId() {
+        return this.sessionId;
     }
 }

@@ -160,6 +160,8 @@ public class AuthenticationManager {
                 return;
             }
 
+            visitor.setSessionId(result.sessionId);
+
             // TODO: Can also create a listener for monitor setup. Now we assume the asynchronous setup works.
             monitorHelper.setup(result, new MonitorHelperSetupListener() {
                 @Override

@@ -34,6 +34,7 @@ public class BeaconEventTest {
     Field createdAtField;
 
     String visitorUUID = "DUMMY_visitor";
+    String sessionId = "DUMMY_sessionId";
     String proximityUUID = "dummy__x-xxxx-xxxx-xxxx-xxxxxxxxxxxx"; // need 32-characters
     String beaconName = "DUMMY_beaconName";
     String macAddress = "DUMMY_macAddress";
@@ -49,14 +50,12 @@ public class BeaconEventTest {
         try {
             majorField = BeaconEvent.class.getDeclaredField("major");
             minorField = BeaconEvent.class.getDeclaredField("minor");
-            rssiField = BeaconEvent.class.getDeclaredField("rssi");
             uuidField = BeaconEvent.class.getDeclaredField("uuid");
             typeField = BeaconEvent.class.getDeclaredField("type");
             createdAtField = BeaconEvent.class.getDeclaredField("createdAt");
 
             majorField.setAccessible(true);
             minorField.setAccessible(true);
-            rssiField.setAccessible(true);
             uuidField.setAccessible(true);
             typeField.setAccessible(true);
             createdAtField.setAccessible(true);
@@ -70,14 +69,14 @@ public class BeaconEventTest {
 
     @Test
     public void testConstructor() {
-        BeaconEvent event = new BeaconEvent(visitorUUID, beacon, BeaconEvent.EventType.ENTER, now);
+        BeaconEvent event = new BeaconEvent(visitorUUID, sessionId, beacon, BeaconEvent.EventType.ENTER, now);
         helpValidateEventFields(event);
     }
 
     @Test
     public void testParcelable() {
         Parcel parcel = Parcel.obtain();
-        BeaconEvent event = new BeaconEvent(visitorUUID, beacon, BeaconEvent.EventType.ENTER, now);
+        BeaconEvent event = new BeaconEvent(visitorUUID, sessionId, beacon, BeaconEvent.EventType.ENTER, now);
         helpValidateEventFields(event);
         event.writeToParcel(parcel, 0);
 
@@ -89,13 +88,12 @@ public class BeaconEventTest {
     @Test
     public void testToFirebaseObject() {
         String visitorUUID = "DUMMY_visitorUUID";
-        BeaconEvent event = new BeaconEvent(visitorUUID, beacon, BeaconEvent.EventType.ENTER, now);
+        BeaconEvent event = new BeaconEvent(visitorUUID, sessionId, beacon, BeaconEvent.EventType.ENTER, now);
         HashMap<String, Object> eventInfo = event.toFirebaseObject();
 
         assertEquals(eventInfo.get("created_at"), now.toString());
         assertEquals(eventInfo.get("major"), major);
         assertEquals(eventInfo.get("minor"), minor);
-        assertEquals(eventInfo.get("rssi"), rssi);
         assertEquals(eventInfo.get("uuid"), proximityUUID);
         assertEquals(eventInfo.get("visitor_uuid"), visitorUUID);
         assertEquals(eventInfo.get("type"), "didEnterRegion");
@@ -105,7 +103,6 @@ public class BeaconEventTest {
         try {
             assertEquals(majorField.getInt(event), major);
             assertEquals(minorField.getInt(event), minor);
-            assertEquals(rssiField.getInt(event), rssi);
             assertEquals(uuidField.get(event), proximityUUID);
             assertEquals(((Date) createdAtField.get(event)).getTime(), now.getTime());
             assertEquals(typeField.get(event), BeaconEvent.EventType.ENTER);
