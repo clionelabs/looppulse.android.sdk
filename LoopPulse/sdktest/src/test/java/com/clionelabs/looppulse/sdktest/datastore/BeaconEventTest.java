@@ -34,7 +34,7 @@ public class BeaconEventTest {
     Field createdAtField;
 
     String visitorUUID = "DUMMY_visitor";
-    String sessionId = "DUMMY_sessionId";
+    String captureId = "DUMMY_captureId";
     String proximityUUID = "dummy__x-xxxx-xxxx-xxxx-xxxxxxxxxxxx"; // need 32-characters
     String beaconName = "DUMMY_beaconName";
     String macAddress = "DUMMY_macAddress";
@@ -69,14 +69,14 @@ public class BeaconEventTest {
 
     @Test
     public void testConstructor() {
-        BeaconEvent event = new BeaconEvent(visitorUUID, sessionId, beacon, BeaconEvent.EventType.ENTER, now);
+        BeaconEvent event = new BeaconEvent(visitorUUID, captureId, beacon, BeaconEvent.EventType.ENTER, now);
         helpValidateEventFields(event);
     }
 
     @Test
     public void testParcelable() {
         Parcel parcel = Parcel.obtain();
-        BeaconEvent event = new BeaconEvent(visitorUUID, sessionId, beacon, BeaconEvent.EventType.ENTER, now);
+        BeaconEvent event = new BeaconEvent(visitorUUID, captureId, beacon, BeaconEvent.EventType.ENTER, now);
         helpValidateEventFields(event);
         event.writeToParcel(parcel, 0);
 
@@ -88,7 +88,7 @@ public class BeaconEventTest {
     @Test
     public void testToFirebaseObject() {
         String visitorUUID = "DUMMY_visitorUUID";
-        BeaconEvent event = new BeaconEvent(visitorUUID, sessionId, beacon, BeaconEvent.EventType.ENTER, now);
+        BeaconEvent event = new BeaconEvent(visitorUUID, captureId, beacon, BeaconEvent.EventType.ENTER, now);
         HashMap<String, Object> eventInfo = event.toFirebaseObject();
 
         assertEquals(eventInfo.get("created_at"), now.toString());
@@ -97,6 +97,7 @@ public class BeaconEventTest {
         assertEquals(eventInfo.get("uuid"), proximityUUID);
         assertEquals(eventInfo.get("visitor_uuid"), visitorUUID);
         assertEquals(eventInfo.get("type"), "didEnterRegion");
+        assertEquals(eventInfo.get("capture_id"), captureId);
     }
 
     private void helpValidateEventFields(BeaconEvent event) {

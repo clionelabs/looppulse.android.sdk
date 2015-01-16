@@ -18,16 +18,16 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
     private int major;
     private int minor;
     private String visitorUUID;
-    private String sessionId;
+    private String captureId;
     private EventType type;
     private Date createdAt;
 
-    public BeaconEvent(String visitorUUID, String sessionId, Beacon beacon, EventType eventType, Date createdAt) {
+    public BeaconEvent(String visitorUUID, String captureId, Beacon beacon, EventType eventType, Date createdAt) {
         this.uuid = beacon.getProximityUUID();
         this.major = beacon.getMajor();
         this.minor = beacon.getMinor();
         this.visitorUUID = visitorUUID;
-        this.sessionId = sessionId;
+        this.captureId = captureId;
         this.type = eventType;
         this.createdAt = createdAt;
     }
@@ -51,7 +51,7 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
         eventInfo.put("major", major);
         eventInfo.put("minor", minor);
         eventInfo.put("visitor_uuid", visitorUUID);
-        eventInfo.put("session_id", sessionId);
+        eventInfo.put("capture_id", captureId);
         eventInfo.put("type", typeString);
         eventInfo.put("created_at", createdAt.toString());
         return eventInfo;
@@ -63,7 +63,7 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
 
     public void writeToParcel(Parcel out, int flags) {
         out.writeString(visitorUUID);
-        out.writeString(sessionId);
+        out.writeString(captureId);
         out.writeSerializable(createdAt);
         out.writeInt(major);
         out.writeInt(minor);
@@ -83,7 +83,7 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
 
     private BeaconEvent(Parcel in) {
         visitorUUID = in.readString();
-        sessionId = in.readString();
+        captureId = in.readString();
         createdAt = (Date) in.readSerializable();
         major = in.readInt();
         minor = in.readInt();
