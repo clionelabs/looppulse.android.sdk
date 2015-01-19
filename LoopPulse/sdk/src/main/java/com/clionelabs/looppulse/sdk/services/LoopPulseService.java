@@ -182,7 +182,7 @@ public class LoopPulseService extends Service {
             @Override
             public void onBeaconEntered(Beacon beacon) {
                 Log.d(TAG, "onBeaconEntered " + beacon);
-                BeaconEvent beaconEvent = new BeaconEvent(visitor.getUUID(), beacon, BeaconEvent.EventType.ENTER, new Date());
+                BeaconEvent beaconEvent = new BeaconEvent(visitor.getUUID(), visitor.getCaptureId(), beacon, BeaconEvent.EventType.ENTER, new Date());
                 dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
                 LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
             }
@@ -190,7 +190,7 @@ public class LoopPulseService extends Service {
             @Override
             public void onBeaconExited(Beacon beacon) {
                 Log.d(TAG, "onBeaconExited " + beacon);
-                BeaconEvent beaconEvent = new BeaconEvent(visitor.getUUID(), beacon, BeaconEvent.EventType.EXIT, new Date());
+                BeaconEvent beaconEvent = new BeaconEvent(visitor.getUUID(), visitor.getCaptureId(), beacon, BeaconEvent.EventType.EXIT, new Date());
                 dataStoreHelper.createFirebaseBeaconEvent(beaconEvent);
                 LoopPulseServiceBroadcaster.sendBeaconEvent(context, beaconEvent);
             }

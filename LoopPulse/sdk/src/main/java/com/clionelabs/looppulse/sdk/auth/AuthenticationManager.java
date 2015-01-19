@@ -110,13 +110,13 @@ public class AuthenticationManager {
                 deviceObj.put("model", visitor.getModel());
                 deviceObj.put("systemVersion", visitor.getSystemVersion());
 
-                JSONObject sessionObj = new JSONObject();
-                sessionObj.put("visitorUUID", visitor.getUUID());
-                sessionObj.put("sdk", sdkObj);
-                sessionObj.put("device", deviceObj);
+                JSONObject captureObj = new JSONObject();
+                captureObj.put("visitorUUID", visitor.getUUID());
+                captureObj.put("sdk", sdkObj);
+                captureObj.put("device", deviceObj);
 
                 JSONObject obj = new JSONObject();
-                obj.put("session", sessionObj);
+                obj.put("capture", captureObj);
                 post.setEntity(new StringEntity(obj.toString()));
 
                 HttpResponse response = httpclient.execute(post);
@@ -159,6 +159,8 @@ public class AuthenticationManager {
                 }
                 return;
             }
+
+            visitor.setCaptureId(result.captureId);
 
             // TODO: Can also create a listener for monitor setup. Now we assume the asynchronous setup works.
             monitorHelper.setup(result, new MonitorHelperSetupListener() {

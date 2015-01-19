@@ -23,7 +23,6 @@ public class DataStoreHelper {
     private Firebase rootRef;
     private Firebase beaconEventsRef;
     private Firebase visitorEventsRef;
-    private Firebase engagementEventsRef;
     private boolean isReady;
 
     public DataStoreHelper(Context context, PreferencesManager preferencesManager) {
@@ -38,7 +37,6 @@ public class DataStoreHelper {
         this.rootRef = new Firebase(authenticationResult.firebaseRoot);
         this.beaconEventsRef = new Firebase(authenticationResult.firebaseBeaconEventsURL);
         this.visitorEventsRef = new Firebase(authenticationResult.firebaseVisitorEventsURL);
-        this.engagementEventsRef = new Firebase(authenticationResult.firebaseEngagementEventsURL);
 
         this.rootRef.authWithCustomToken(authenticationResult.firebaseToken, new Firebase.AuthResultHandler() {
             @Override

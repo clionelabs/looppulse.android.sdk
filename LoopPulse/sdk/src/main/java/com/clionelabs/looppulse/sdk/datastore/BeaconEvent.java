@@ -14,25 +14,20 @@ import java.util.HashMap;
 public class BeaconEvent implements FirebaseEvent, Parcelable {
     public enum EventType {ENTER, EXIT, RANGE};
 
-    private String visitorUUID;
-    private double accuracy;
-    private Date createdAt;
+    private String uuid;
     private int major;
     private int minor;
-    private String proximity;
-    private int rssi;
+    private String visitorUUID;
+    private String captureId;
     private EventType type;
-    private String uuid;
+    private Date createdAt;
 
-
-    public BeaconEvent(String visitorUUID, Beacon beacon, EventType eventType, Date createdAt) {
-        this.visitorUUID = visitorUUID;
-        this.accuracy = 0.0; // TODO
+    public BeaconEvent(String visitorUUID, String captureId, Beacon beacon, EventType eventType, Date createdAt) {
+        this.uuid = beacon.getProximityUUID();
         this.major = beacon.getMajor();
         this.minor = beacon.getMinor();
-        this.proximity = ""; // TODO
-        this.rssi = beacon.getRssi();
-        this.uuid = beacon.getProximityUUID();
+        this.visitorUUID = visitorUUID;
+        this.captureId = captureId;
         this.type = eventType;
         this.createdAt = createdAt;
     }
@@ -47,23 +42,18 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
             case EXIT:
                 typeString = "didExitRegion";
                 break;
-            case RANGE:
-                typeString = "didRangeBeacons";
-                break;
             default:
                 break;
         }
 
         HashMap<String, Object> eventInfo = new HashMap<String, Object>();
-        eventInfo.put("accuracy", accuracy);
-        eventInfo.put("created_at", createdAt.toString());
+        eventInfo.put("uuid", uuid);
         eventInfo.put("major", major);
         eventInfo.put("minor", minor);
-        eventInfo.put("proximity", proximity);
-        eventInfo.put("rssi", rssi);
-        eventInfo.put("uuid", uuid);
-        eventInfo.put("type", typeString);
         eventInfo.put("visitor_uuid", visitorUUID);
+        eventInfo.put("capture_id", captureId);
+        eventInfo.put("type", typeString);
+        eventInfo.put("created_at", createdAt.toString());
         return eventInfo;
     }
 
@@ -73,12 +63,10 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
 
     public void writeToParcel(Parcel out, int flags) {
         out.writeString(visitorUUID);
-        out.writeDouble(accuracy);
+        out.writeString(captureId);
         out.writeSerializable(createdAt);
         out.writeInt(major);
         out.writeInt(minor);
-        out.writeString(proximity);
-        out.writeInt(rssi);
         out.writeSerializable(type);
         out.writeString(uuid);
     }
@@ -95,12 +83,10 @@ public class BeaconEvent implements FirebaseEvent, Parcelable {
 
     private BeaconEvent(Parcel in) {
         visitorUUID = in.readString();
-        accuracy = in.readDouble();
+        captureId = in.readString();
         createdAt = (Date) in.readSerializable();
         major = in.readInt();
         minor = in.readInt();
-        proximity = in.readString();
-        rssi = in.readInt();
         type = (EventType) in.readSerializable();
         uuid = in.readString();
     }

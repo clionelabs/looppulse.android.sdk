@@ -141,8 +141,10 @@ public class MonitorHelper {
         scheduleNextRanging();
 
         if (playServicesConnected()) {
-            GeofenceRequester geofenceRequester = new GeofenceRequester(context);
-            geofenceRequester.addGeofences(geofenceLocations);
+            if (geofenceLocations.size() > 0) {
+                GeofenceRequester geofenceRequester = new GeofenceRequester(context);
+                geofenceRequester.addGeofences(geofenceLocations);
+            }
         }
     }
 
@@ -170,12 +172,14 @@ public class MonitorHelper {
         LoopPulseServiceExecutor.cancelRangeAlarm(context);
 
         if (playServicesConnected()) {
-            GeofenceRemover geofenceRemover = new GeofenceRemover(context);
-            ArrayList<String> requestIds = new ArrayList<String>();
-            for (GeofenceLocation geofenceLocation: geofenceLocations) {
-                requestIds.add(geofenceLocation.getRequestId());
+            if (geofenceLocations.size() > 0) {
+                GeofenceRemover geofenceRemover = new GeofenceRemover(context);
+                ArrayList<String> requestIds = new ArrayList<String>();
+                for (GeofenceLocation geofenceLocation : geofenceLocations) {
+                    requestIds.add(geofenceLocation.getRequestId());
+                }
+                geofenceRemover.removeGeofencesById(requestIds);
             }
-            geofenceRemover.removeGeofencesById(requestIds);
         }
     }
 
