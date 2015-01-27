@@ -49,6 +49,20 @@ public class LoopPulseServiceExecutor {
         context.startService(intent);
     }
 
+    public static void setInternalReauthAlarm(Context context) {
+        AlarmManager am = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(LoopPulseService.INTERNAL_REAUTH_ACTION_INTENT);
+        PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
+        am.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, AlarmManager.INTERVAL_DAY, AlarmManager.INTERVAL_DAY, pi);
+    }
+
+    public static void cancelInternalReauthAlarm(Context context) {
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(LoopPulseService.INTERNAL_REAUTH_ACTION_INTENT);
+        PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
+        am.cancel(pi);
+    }
+
     public static void setRangeAlarm(Context context, int delaySec) {
         AlarmManager am = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(LoopPulseService.RANGE_ACTION_INTENT);

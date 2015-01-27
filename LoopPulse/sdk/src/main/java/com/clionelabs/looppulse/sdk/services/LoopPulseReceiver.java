@@ -19,6 +19,10 @@ public class LoopPulseReceiver extends WakefulBroadcastReceiver {
             Intent service = new Intent(context, LoopPulseService.class);
             service.setAction(LoopPulseService.ActionType.DO_RANGE.toString());
             startWakefulService(context, service);
+        } else if (action.equals(LoopPulseService.INTERNAL_REAUTH_ACTION_INTENT)) {
+            Intent service = new Intent(context, LoopPulseService.class);
+            service.setAction(LoopPulseService.ActionType.INTERNAL_REAUTH.toString());
+            startWakefulService(context, service);
         }
     }
 }

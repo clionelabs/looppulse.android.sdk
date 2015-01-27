@@ -39,6 +39,8 @@
             <intent-filter>
                 <action android:name="com.clionelabs.looppulse.sdk.services.action.RANGE" >
                 </action>
+                <action android:name="com.clionelabs.looppulse.sdk.services.action.INTERNAL_REAUTH" >
+                </action>
             </intent-filter>
         </receiver>
     </application>
