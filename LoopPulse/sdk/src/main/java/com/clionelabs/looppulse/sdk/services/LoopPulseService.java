@@ -32,11 +32,12 @@ public class LoopPulseService extends Service {
     private static String TAG = LoopPulseService.class.getCanonicalName();
 
     public static final String RANGE_ACTION_INTENT = "com.clionelabs.looppulse.sdk.services.action.RANGE";
+    public static final String INTERNAL_REAUTH_ACTION_INTENT = "com.clionelabs.looppulse.sdk.services.action.INTERNAL_REAUTH";
     public static final String EXTRA_AUTH_APP_ID = "com.clionelabs.looppulse.sdk.services.EXTRA_AUTH_APP_ID";
     public static final String EXTRA_AUTH_APP_TOKEN = "com.clionelabs.looppulse.sdk.services.EXTRA_AUTH_APP_TOKEN";
     public static final String EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID = "com.clionelabs.looppulse.sdk.services.EXTRA_IDENTIFY_VISITOR_EXTERNAL_ID";
     public static final String EXTRA_TAG_VISITOR_PROPERTIES = "com.clionelabs.looppulse.sdk.services.EXTRA_TAG_VISITOR_PROPERTIES";
-    public enum ActionType {AUTH, START_MONITORING, STOP_MONITORING, DO_RANGE, IDENTIFY_VISITOR, TAG_VISITOR, ENTER_GEOFENCE, EXIT_GEOFENCE};
+    public enum ActionType {AUTH, INTERNAL_REAUTH, START_MONITORING, STOP_MONITORING, DO_RANGE, IDENTIFY_VISITOR, TAG_VISITOR, ENTER_GEOFENCE, EXIT_GEOFENCE};
 
     private PreferencesManager preferencesManager;
     private AuthenticationManager authenticationManager;
@@ -61,6 +62,12 @@ public class LoopPulseService extends Service {
         if (action.equals(ActionType.AUTH.toString())) {
             execActionAuth(intent);
             return Service.START_REDELIVER_INTENT;
+        }
+
+        // The SDK will automatically re-authenticate itself regularly in order to refresh the authenticated response.
+        if (action.equals(ActionType.INTERNAL_REAUTH.toString())) {
+            execActionInternalReAuth(intent);
+            return Service.START_NOT_STICKY;
         }
 
         if (action.equals(ActionType.STOP_MONITORING.toString())) {
@@ -145,6 +152,10 @@ public class LoopPulseService extends Service {
         });
     }
 
+    private void execActionInternalReAuth(Intent intent) {
+        authenticationManager.auth(null);
+    }
+
     private void execTagVisitor(Intent intent) {
         HashMap<String, String> properties = (HashMap<String, String>) intent.getSerializableExtra(EXTRA_TAG_VISITOR_PROPERTIES);
         dataStoreHelper.tagVisitor(visitor.getUUID(), properties);
@@ -162,11 +173,13 @@ public class LoopPulseService extends Service {
         }
         monitorHelper.startRanging();
         LoopPulseServiceBroadcaster.sendMonitoringStarted(context);
+        LoopPulseServiceExecutor.setInternalReauthAlarm(context); // Re-authenticate regularly to refresh authenticated response
     }
 
     private void execActionStopMonitoring(Intent intent) {
         monitorHelper.stopRanging();
         LoopPulseServiceBroadcaster.sendMonitoringStopped(context);
+        LoopPulseServiceExecutor.cancelInternalReauthAlarm(context);
     }
 
     private void execActionEnterGeofence(Intent intent) {
