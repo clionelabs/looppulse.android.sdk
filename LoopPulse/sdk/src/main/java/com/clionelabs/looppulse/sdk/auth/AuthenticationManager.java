@@ -4,11 +4,12 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.clionelabs.looppulse.sdk.datastore.DataStoreHelper;
 import com.clionelabs.looppulse.sdk.datastore.DataStoreHelperSetupListener;
 import com.clionelabs.looppulse.sdk.monitor.MonitorHelper;
 import com.clionelabs.looppulse.sdk.monitor.MonitorHelperSetupListener;
 import com.clionelabs.looppulse.sdk.services.Visitor;
-import com.clionelabs.looppulse.sdk.datastore.DataStoreHelper;
+import com.clionelabs.looppulse.sdk.util.Constants;
 import com.clionelabs.looppulse.sdk.util.PreferencesManager;
 
 import org.apache.http.HttpResponse;
@@ -38,8 +39,6 @@ import java.io.IOException;
 
 public class AuthenticationManager {
     private static String TAG = AuthenticationManager.class.getCanonicalName();
-    private static final String AUTH_URL = "http://localhost:8010/api/authenticate/applications/";
-//    private static final String AUTH_URL = "http://192.168.0.102:3000/api/authenticate/applications/";
 
     private Context context;
     private AuthenticationListener authenticationListener;
@@ -100,7 +99,7 @@ public class AuthenticationManager {
                 String appToken = params[1];
 
                 HttpClient httpclient = new DefaultHttpClient();
-                HttpPost post = new HttpPost(AUTH_URL + appID);
+                HttpPost post = new HttpPost(Constants.AUTH_URL + appID);
                 post.setHeader("x-auth-token", appToken);
                 post.setHeader("Content-Type", "application/json");
                 JSONObject sdkObj = new JSONObject();
