@@ -14,7 +14,7 @@ import com.clionelabs.looppulse.sdk.datastore.BeaconEvent;
 
 public class MainActivity extends Activity implements LoopPulseListener {
     private static final String TAG = "MegaBoxApplication";
-    private static String APPLICATION_ID = "HHog73MZQh3Wb8hTJ";
+    private static String APPLICATION_ID = "KSxRAjBFQZ38n5TFx";
     private static String APPLICATION_TOKEN = "wefijoweifj";
     private LoopPulse loopPulse;
     private boolean isLoopPulseAuthenticated;

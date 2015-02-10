@@ -38,6 +38,10 @@ public class DataStoreHelper {
         this.beaconEventsRef = new Firebase(authenticationResult.firebaseBeaconEventsURL);
         this.visitorEventsRef = new Firebase(authenticationResult.firebaseVisitorEventsURL);
 
+        if (this.rootRef.getAuth() != null) {
+            this.rootRef.unauth();
+        }
+
         this.rootRef.authWithCustomToken(authenticationResult.firebaseToken, new Firebase.AuthResultHandler() {
             @Override
             public void onAuthenticated(AuthData authData) {

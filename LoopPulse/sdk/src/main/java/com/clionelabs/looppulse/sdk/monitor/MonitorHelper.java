@@ -26,7 +26,8 @@ public class MonitorHelper {
     private static String TAG = MonitorHelper.class.getCanonicalName();
 
     private static int RANGE_PERIOD_SEC = 5;
-    private static int MAX_RESCHEDULE_SEC = 1800; // 30 mins
+    private static int MIN_NEXT_RANGE_SEC = 2; // 2 seconds
+    private static int MAX_NEXT_RANGE_SEC = 1800; // 30 mins
 
     private Context context;
     private BeaconManager beaconManager;
@@ -34,9 +35,9 @@ public class MonitorHelper {
     private final Object isRangingLock = new Object();
     private boolean isRanging;
     private RangingStatus rangingStatus;
-    private BluetoothAdapter bluetoothAdapter;
     private boolean isMonitoring = false;
     private boolean isReady;
+    private BluetoothAdapter bluetoothAdapter;
     private ArrayList<GeofenceLocation> geofenceLocations;
     private ArrayList<Region> monitorRegions;
 
@@ -44,9 +45,9 @@ public class MonitorHelper {
         this.context = context;
         this.allRegion = new Region("LoopPulse-Generic", null, null, null);
         this.beaconManager = new BeaconManager(context);
-        this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         this.geofenceLocations = new ArrayList<GeofenceLocation>();
         this.monitorRegions = new ArrayList<Region>();
+        this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         this.isReady = false;
     }
 
@@ -76,9 +77,11 @@ public class MonitorHelper {
         while (iter.hasNext()) {
             Beacon beacon = iter.next();
             boolean existed = false;
+            // TODO: build a HashMap using uuid-major-minor to support an O(1) checking
             for (Region region: monitorRegions) {
-                // Need to check major, minor?
-                if (region.getProximityUUID().equals(beacon.getProximityUUID())) {
+                if (region.getProximityUUID().equals(beacon.getProximityUUID())
+                        && region.getMajor() == beacon.getMajor()
+                        && region.getMinor() == beacon.getMinor()) {
                     existed = true;
                     break;
                 }
@@ -103,8 +106,14 @@ public class MonitorHelper {
             Log.d(TAG, "Already Ranging");
             return;
         }
-        setIsRanging(true);
 
+        if (!bluetoothAdapter.isEnabled()) {
+            finishDoRanging(listener);
+            Log.d(TAG, "Bluethooh not enabled");
+            return;
+        }
+
+        setIsRanging(true);
         Handler handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -114,16 +123,8 @@ public class MonitorHelper {
                     filterMonitorBeacons(beacons);
                     rangingStatus.receiveRangingBeacons(beacons);
                 } else if (type.equals(RangingRunnable.MSG_FINISH)) {
-                    for (Beacon beacon: rangingStatus.getEnteredBeacons()) {
-                        listener.onBeaconEntered(beacon);
-                    }
-                    for (Beacon beacon: rangingStatus.getExcitedBeacons()) {
-                        listener.onBeaconExited(beacon);
-                    }
                     setIsRanging(false);
-                    rangingStatus.updateStatus();
-                    listener.onFinished();
-                    scheduleNextRanging();
+                    finishDoRanging(listener);
                 }
             }
         };
@@ -132,12 +133,21 @@ public class MonitorHelper {
         new Thread(new RangingRunnable(beaconManager, allRegion, RANGE_PERIOD_SEC, handler)).start();
     }
 
+    private void finishDoRanging(RangingListener listener) {
+        for (Beacon beacon: rangingStatus.getEnteredBeacons()) {
+            listener.onBeaconEntered(beacon);
+        }
+        for (Beacon beacon: rangingStatus.getExcitedBeacons()) {
+            listener.onBeaconExited(beacon);
+        }
+        rangingStatus.updateStatus();
+        listener.onFinished();
+        scheduleNextRanging();
+    }
+
     public void startRanging() {
         this.isMonitoring = true;
         this.rangingStatus = new RangingStatus();
-        if (!bluetoothAdapter.isEnabled()) {
-            bluetoothAdapter.enable(); // this call is asynchronous? make it more reliable?
-        }
         scheduleNextRanging();
 
         if (playServicesConnected()) {
@@ -151,7 +161,7 @@ public class MonitorHelper {
     /**
      * TODO: Improve the next ranging time, to make it more responsive and power-saving
      */
-    public void scheduleNextRanging() {
+    private void scheduleNextRanging() {
         if (!this.isMonitoring) return;
 
         long last = rangingStatus.getLastActiveTime().getTime();
@@ -162,7 +172,7 @@ public class MonitorHelper {
         }
 
         long inactiveSec = (new Date().getTime() - last) / 1000;
-        int nextScheduleSec = (int) Math.min(inactiveSec / 2, MAX_RESCHEDULE_SEC);
+        int nextScheduleSec = (int) Math.max(Math.min(inactiveSec / 2, MAX_NEXT_RANGE_SEC), MIN_NEXT_RANGE_SEC);
         Log.d(TAG, "next range in " + nextScheduleSec + " seconds");
         LoopPulseServiceExecutor.setRangeAlarm(context, nextScheduleSec);
     }
