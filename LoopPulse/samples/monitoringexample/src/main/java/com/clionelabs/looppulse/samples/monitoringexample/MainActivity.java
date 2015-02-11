@@ -58,6 +58,7 @@ public class MainActivity extends Activity implements LoopPulseListener {
         textView.setText(msg);
         LinearLayout mainLayout = (LinearLayout) findViewById(R.id.mainView);
         mainLayout.addView(textView);
+        mainLayout.addView(new TextView(this));
     }
 
     @Override
