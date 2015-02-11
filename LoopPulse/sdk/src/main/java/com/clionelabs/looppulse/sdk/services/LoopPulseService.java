@@ -211,7 +211,6 @@ public class LoopPulseService extends Service {
             @Override
             public void onFinished() {
                 Log.d(TAG, "Ranging Finished");
-                monitorHelper.scheduleNextRanging();
             }
         });
     }
