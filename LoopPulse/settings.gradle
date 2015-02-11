@@ -1,1 +1,1 @@
-include ':sdk', ':samples:megabox', ':sdktest', ':samples:monitoringexample'
+include ':sdk', ':samples:megabox', ':sdktest', ':samples:monitoringexample', ':samples:eztable', ':samples:tw91mai'
