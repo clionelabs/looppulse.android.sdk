@@ -66,6 +66,8 @@ public class AuthenticationManager {
     }
 
     public void auth(AuthenticationListener listener) {
+        this.helpersReadyMask = 0;
+        this.isAutenticated = false;
         authenticationListener = listener;
         String appID = preferencesManager.getAppId();
         String appToken = preferencesManager.getAppToken();
